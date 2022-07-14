@@ -13,25 +13,41 @@
 //  Subdivision Surface Functions
 //      apply               Applies Loop subdivision to BufferGeometry, returns new BufferGeometry
 //      edgeSplit           Splits all triangles at edges shared by coplanar triangles
-//      flat                One iteration of Loop (Charles Loop, 1987) subdivision, without point averaging
-//      smooth              One iteration of Loop (Charles Loop, 1987) subdivision, with point averaging
+//      flat                One iteration of Loop subdivision, without point averaging
+//      smooth              One iteration of Loop subdivision, with point averaging
 //
-//  NOTE: This modifier works best with geometry whose triangles share edges AND edge vertices!
+//  More Info
+//      This modifier uses the Loop (Charles Loop, 1987) subdivision surface algorithm to smooth
+//      modern three.js BufferGeometry.
 //
-//      ----- COPLANAR FACE -----
+//      At one point, three.js included a subdivision surface modifier in the extended examples (see bottom
+//      of file for links), it was removed in r125. This modifier was originally based on the Catmull-Clark
+//      algorithm, which works best for geometry with convex coplanar n-gon faces. The modifier was changed to use
+//      the Loop algorithm in three.js r60, which was designed to work better with triangle based geometry.
 //
-//        OKAY            NOT OKAY
-//          O                O
-//         /|\              / \
-//        / | \            /   \
-//       /  |  \          /     \
-//      /   |   \        /       \
-//     O----O----O      O----O----O
-//      \   |   /        \   |   /
-//       \  |  /          \  |  /
-//        \ | /            \ | /
-//         \|/              \|/
-//          O                O
+//      The Loop algorithm, however, doesn't always provide uniform results as the vertices are skewed toward
+//      the most used vertex positions. A triangle based box (like BoxGeometry for example) will favor the corners.
+//      To alleviate this issue, this implementation includes an initial pass to split coplanar faces at their
+//      shared edges. It starts by splitting along the longest shared edge first, and then from that midpoint it
+//      splits to any remaining coplanar shared edges. This can be disabled by passing 'split' as false.
+//
+//      Also by default, this implementation inserts new uv coordinates, but does not average them using the Loop
+//      algorithm. In some cases (usually in round-ish geometries), this will produce undesired results, a noticeable
+//      tearing will occur. In such cases, try passing 'uvSmooth' as true to enable uv averaging.
+//      
+//  Notes
+//      - This modifier works best with geometry whose triangles share edges AND edge vertices. See diagram below.
+//
+//          OKAY          NOT OKAY
+//            O              O
+//           /|\            / \
+//          / | \          /   \
+//         /  |  \        /     \
+//        O---O---O      O---O---O
+//         \  |  /        \  |  /
+//          \ | /          \ | /
+//           \|/            \|/
+//            O              O
 //
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +110,7 @@ class LoopSubdivision {
      * @param {Number} maxTriangles If geometry contains more than this many triangles, subdivision will not contiunue
      * @returns {Object} Returns new, subdivided, three.js BufferGeometry object
     */
-    static apply(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity) {
+    static apply(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = 25000) {
         if (bufferGeometry.attributes.position === undefined) {
             console.warn(`LoopSubdivision.modify(): Geometry missing required attribute, 'position'`); 
             return bufferGeometry;
@@ -605,12 +621,21 @@ function verifyGeometry(geometry) {
 export { LoopSubdivision };
 
 /////////////////////////////////////////////////////////////////////////////////////
-/////   Reference(s)
+/////   Reference
 /////////////////////////////////////////////////////////////////////////////////////
 //
 //      https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/thesis-10.pdf
 //      https://en.wikipedia.org/wiki/Loop_subdivision_surface
 //      https://cseweb.ucsd.edu/~alchern/teaching/cse167_fa21/6-3Surfaces.pdf
+//
+/////////////////////////////////////////////////////////////////////////////////////
+/////   Original three.js SubdivisionModifier
+/////////////////////////////////////////////////////////////////////////////////////
+//  
+// Loop, r124
+//      https://github.com/mrdoob/three.js/blob/r124/examples/jsm/modifiers/SubdivisionModifier.js
+// Catmull-Clark, r59
+//      https://github.com/mrdoob/three.js/blob/r59/examples/js/modifiers/SubdivisionModifier.js
 //
 /////////////////////////////////////////////////////////////////////////////////////
 /////   License
