@@ -51,12 +51,7 @@
 //
 /////////////////////////////////////////////////////////////////////////////////////
 
-import {
-    BufferAttribute,
-    BufferGeometry,
-    Triangle,
-    Vector3,
-} from 'https://unpkg.com/three@0.142.0';
+import * as THREE from 'three';
 
 ///// Constants
 
@@ -64,29 +59,29 @@ const POSITION_DECIMALS = 2;
 
 ///// Local Variables
 
-const _average = new Vector3();
-const _center = new Vector3();
-const _midpoint = new Vector3();
-const _normal = new Vector3();
-const _temp = new Vector3();
-const _vector = new Vector3();
-const _vector0 = new Vector3(); // .Vector4();
-const _vector1 = new Vector3(); // .Vector4();
-const _vector2 = new Vector3(); // .Vector4();
-const _vec0to1 = new Vector3();
-const _vec1to2 = new Vector3();
-const _vec2to0 = new Vector3();
+const _average = new THREE.Vector3();
+const _center = new THREE.Vector3();
+const _midpoint = new THREE.Vector3();
+const _normal = new THREE.Vector3();
+const _temp = new THREE.Vector3();
+const _vector = new THREE.Vector3();
+const _vector0 = new THREE.Vector3(); // .Vector4();
+const _vector1 = new THREE.Vector3(); // .Vector4();
+const _vector2 = new THREE.Vector3(); // .Vector4();
+const _vec0to1 = new THREE.Vector3();
+const _vec1to2 = new THREE.Vector3();
+const _vec2to0 = new THREE.Vector3();
 const _position = [
-    new Vector3(),
-    new Vector3(),
-    new Vector3(),
+    new THREE.Vector3(),
+    new THREE.Vector3(),
+    new THREE.Vector3(),
 ];
 const _vertex = [
-    new Vector3(),
-    new Vector3(),
-    new Vector3(),
+    new THREE.Vector3(),
+    new THREE.Vector3(),
+    new THREE.Vector3(),
 ];
-const _triangle = new Triangle();
+const _triangle = new THREE.Triangle();
 
 /////////////////////////////////////////////////////////////////////////////////////
 /////   Loop Subdivision Surface
@@ -110,7 +105,7 @@ class LoopSubdivision {
      * @param {Number} maxTriangles If geometry contains more than this many triangles, subdivision will not contiunue
      * @returns {Object} Returns new, subdivided, three.js BufferGeometry object
     */
-    static apply(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = 25000) {
+    static apply(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity) {
         if (bufferGeometry.attributes.position === undefined) {
             console.warn(`LoopSubdivision.modify(): Geometry missing required attribute, 'position'`); 
             return bufferGeometry;
@@ -146,7 +141,7 @@ class LoopSubdivision {
         ///// Geometries
         if (! verifyGeometry(geometry)) return geometry;
         const existing = (geometry.index !== null) ? geometry.toNonIndexed() : geometry.clone();
-        const split = new BufferGeometry();
+        const split = new THREE.BufferGeometry();
 
         ///// Attributes
         const attributeList = [ 'position', 'normal', 'uv', 'color' ]; // ALT: = Object.keys(existing.attributes);
@@ -310,7 +305,7 @@ class LoopSubdivision {
                 }
             }
 
-            split.setAttribute(attributeName, new BufferAttribute(floatArray, attribute.itemSize));
+            split.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, attribute.itemSize));
         });
 
         // Clean Up, Return New Geometry
@@ -328,7 +323,7 @@ class LoopSubdivision {
         ///// Geometries
         if (! verifyGeometry(geometry)) return geometry;
         const existing = (geometry.index !== null) ? geometry.toNonIndexed() : geometry.clone();
-        const loop = new BufferGeometry();
+        const loop = new THREE.BufferGeometry();
 
         ///// Attributes
         const attributeList = [ 'position', 'normal', 'uv', 'color' ]; // ALT: = Object.keys(existing.attributes);
@@ -363,7 +358,7 @@ class LoopSubdivision {
                 setTriangle(floatArray, index, step, _vec0to1, _vec1to2, _vec2to0); index += (step * 3);
             }
 
-            loop.setAttribute(attributeName, new BufferAttribute(floatArray, attribute.itemSize));
+            loop.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, attribute.itemSize));
         });
 
         ///// Clean Up
@@ -382,7 +377,7 @@ class LoopSubdivision {
         if (! verifyGeometry(geometry)) return geometry;
         const existing = (geometry.index !== null) ? geometry.toNonIndexed() : geometry.clone();
         const flat = LoopSubdivision.flat(existing);
-        const loop = new BufferGeometry();
+        const loop = new THREE.BufferGeometry();
 
         ///// Attributes
         const attributeList = [ 'position', 'normal', 'uv', 'color' ]; // ALT: = Object.keys(flat.attributes);
@@ -510,7 +505,7 @@ class LoopSubdivision {
                 }
             }
 
-            loop.setAttribute(attributeName, new BufferAttribute(floatArray, flatAttribute.itemSize));
+            loop.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, flatAttribute.itemSize));
         });
 
         ///// Clean Up
