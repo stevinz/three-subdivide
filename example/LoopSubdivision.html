@@ -110,15 +110,40 @@
 				const gui = new GUI({});
 
 				const folder1 = gui.addFolder('Subdivide Params');
-				folder1.add(params, 'geometry', [ 'Box', 'Capsule', 'Circle', 'Cone', 'Cylinder', 'Dodecahedron', 'Icosahedron', 'Octahedron', 'Plane', 'Ring', 'Sphere', 'Tetrahedron', 'Torus' ]).onFinishChange(updateMeshes);
+				const geomController = folder1.add(params, 'geometry', [ 'Box', 'Capsule', 'Circle', 'Cone', 'Cylinder', 'Dodecahedron', 'Icosahedron', 'Octahedron', 'Plane', 'Ring', 'Sphere', 'Tetrahedron', 'Torus' ]).onFinishChange((event) => {
+					switch (params.geometry.toLowerCase()) {
+						case 'box':				params.split = true;	params.uvSmooth = false;	break;
+						case 'capsule':			params.split = false;	params.uvSmooth = false;	break;
+						case 'circle':			params.split = false;	params.uvSmooth = true;		break;
+						case 'cone':			params.split = false;	params.uvSmooth = false;	break;
+						case 'cylinder':		params.split = false;	params.uvSmooth = false;	break;
+						case 'dodecahedron':	params.split = false;	params.uvSmooth = false;	break;
+						case 'icosahedron':		params.split = false;	params.uvSmooth = false;	break;
+						case 'octahedron':		params.split = false;	params.uvSmooth = false;	break;
+						case 'plane':			params.split = false;	params.uvSmooth = true;		break;
+						case 'ring':			params.split = true;	params.uvSmooth = true;		break;
+						case 'sphere':			params.split = false;	params.uvSmooth = false;	break;
+						case 'tetrahedron':		params.split = false;	params.uvSmooth = false;	break;
+						case 'torus':			params.split = false;	params.uvSmooth = false;	break;
+					}
+					refreshDisplay();
+				});
 				folder1.add(params, 'iterations').min(0).max(5).step(1).onFinishChange(updateMeshes);
-				folder1.add(params, 'split').onFinishChange(updateMeshes);
-				folder1.add(params, 'uvSmooth').onFinishChange(updateMeshes);
+				const splitController = folder1.add(params, 'split').onFinishChange(updateMeshes);
+				const smoothController = folder1.add(params, 'uvSmooth').onFinishChange(updateMeshes);
+				
 				folder1.add(params, 'flatOnly').onFinishChange(updateMeshes);
 				folder1.add(params, 'maxTriangles').onFinishChange(updateMeshes);
 
 				const folder2 = gui.addFolder('View');
 				folder2.add(params, 'wireframe').onFinishChange(updateMeshes);
+
+				function refreshDisplay() {
+					geomController.updateDisplay();
+					splitController.updateDisplay();
+					smoothController.updateDisplay();
+					updateMeshes();
+				}
 
 			}
 
