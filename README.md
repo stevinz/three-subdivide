@@ -2,7 +2,7 @@
 
 This modifier uses the [Loop](https://en.wikipedia.org/wiki/Loop_subdivision_surface) (Charles Loop, 1987) subdivision surface algorithm to smooth modern three.js [BufferGeometry](https://threejs.org/docs/?q=geometry#api/en/core/BufferGeometry).
 
-<p align="center"">&mdash; <a href='https://stevinz.github.io/three-subdivide'><font size="+1">Live Demo</font></a> &mdash;</p>
+<p align="center"">&mdash; <a href='https://stevinz.github.io/three-subdivide'>Live Demo</a> &mdash;</p>
 
 ## Screenshot
 
@@ -19,9 +19,7 @@ This modifier uses the [Loop](https://en.wikipedia.org/wiki/Loop_subdivision_sur
 
 ## Apply
 
-```javascript
 LoopSubdivision.apply(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity)
-```
 
 - [bufferGeometry]() : BufferGeometry - existing three.js BufferGeometry object.
 - [iterations]() : Int (optional) - total passes of subdivision to apply, generally between 1 to 5.
