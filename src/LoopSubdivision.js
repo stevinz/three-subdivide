@@ -22,8 +22,8 @@
 //
 //      At one point, three.js included a subdivision surface modifier in the extended examples (see bottom
 //      of file for links), it was removed in r125. This modifier was originally based on the Catmull-Clark
-//      algorithm, which works best for geometry with convex coplanar n-gon faces. The modifier was changed to use
-//      the Loop algorithm in three.js r60, which was designed to work better with triangle based geometry.
+//      algorithm, which works best for geometry with convex coplanar n-gon faces. In three.js r60 the modifier
+//      was changed to use the Loop algorithm, which was designed to work better with triangle based meshes.
 //
 //      The Loop algorithm, however, doesn't always provide uniform results as the vertices are skewed toward
 //      the most used vertex positions. A triangle based box (like BoxGeometry for example) will favor the corners.
