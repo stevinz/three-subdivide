@@ -84,6 +84,8 @@
 				scene.add(new THREE.HemisphereLight(0xffffff, 0x444444));
 
 				texture = new THREE.TextureLoader().load('./textures/uv_grid_opengl.jpg', () => {
+					texture.wrapS = THREE.RepeatWrapping;
+					texture.wrapT = THREE.RepeatWrapping;
 					render();
 				});
 				material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
