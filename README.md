@@ -1,6 +1,6 @@
 # Three Subdivide
 
-Smooth subdivision surface modifier for use with three.js BufferGeometry. This modifier uses the [Loop](https://en.wikipedia.org/wiki/Loop_subdivision_surface) (Charles Loop, 1987) subdivision surface algorithm to smooth modern three.js [BufferGeometry](https://threejs.org/docs/?q=geometry#api/en/core/BufferGeometry).
+Smooth subdivision surface modifier for use with three.js `BufferGeometry`. This modifier uses the [Loop](https://en.wikipedia.org/wiki/Loop_subdivision_surface) (Charles Loop, 1987) subdivision surface algorithm to smooth modern three.js [BufferGeometry](https://threejs.org/docs/?q=geometry#api/en/core/BufferGeometry).
 
 ## Example
 
@@ -29,16 +29,18 @@ LoopSubdivision.apply(bufferGeometry, iterations = 1, split = true, uvSmooth = f
 
 To create subdivided geometry, use the static function apply(). The following code creates a cube with smoothed geometry and adds it to a three.js scene.
 
-    import * as THREE from 'three';
-    import { LoopSubdivision } from 'LoopSubdivision.js';
+```javascript
+import * as THREE from 'three';
+import { LoopSubdivision } from 'LoopSubdivision.js';
 
-    const geometry = LoopSubdivision.apply(new THREE.BoxGeometry());
+const geometry = LoopSubdivision.apply(new THREE.BoxGeometry());
 
-    const material = new THREE.MeshNormalMaterial();
-    const mesh = new THREE.Mesh(geometry, material);
+const material = new THREE.MeshNormalMaterial();
+const mesh = new THREE.Mesh(geometry, material);
 
-    const scene = new THREE.Scene();
-    scene.add(mesh);
+const scene = new THREE.Scene();
+scene.add(mesh);
+```
 
 ----
 ## License
