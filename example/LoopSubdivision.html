@@ -87,7 +87,7 @@
 					render();
 				});
 				material = new THREE.MeshBasicMaterial({ map: texture });
-				wireMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: false, wireframe: true });
+				wireMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: true, wireframe: true });
 				geometryNormal = getGeometry();
 				geometrySmooth =  getGeometry();
 				meshNormal = new THREE.Mesh(new THREE.BufferGeometry(), material);
@@ -98,7 +98,8 @@
 				wireSmooth.visible = false;
 				meshNormal.position.set(-0.7, 0, 0); meshSmooth.position.set( 0.7, 0, 0);
 				wireNormal.position.set(-0.7, 0, 0); wireSmooth.position.set( 0.7, 0, 0);
-				wireNormal.scale.set(1.1, 1.1, 1.1); wireSmooth.scale.set(1.1, 1.1, 1.1);
+				wireNormal.scale.set(1.01, 1.01, 1.01);
+				wireSmooth.scale.set(1.01, 1.01, 1.01);
 				scene.add(meshNormal, meshSmooth);
 				scene.add(wireNormal, wireSmooth);
 				
