@@ -10,19 +10,24 @@ Smooth subdivision surface modifier for use with three.js BufferGeometry. This m
 
 At one point, [three.js](https://threejs.org/) included a subdivision surface modifier in the extended examples, it was removed in r125. This modifier was originally based on the [Catmull-Clark](https://en.wikipedia.org/wiki/Catmull%E2%80%93Clark_subdivision_surface) algorithm, which works best for geometry with convex coplanar n-gon faces. In three.js r60 the modifier was changed to use the Loop algorithm, which was designed to work better with triangle based meshes.
 
-The Loop algorithm, however, doesn't always provide uniform results as the vertices are skewed toward 
-the most used vertex positions. A triangle based box (like BoxGeometry for example) will favor the corners.
-To alleviate this issue, this implementation includes an initial pass to split coplanar faces at their
-shared edges. It starts by splitting along the longest shared edge first, and then from that midpoint it
-splits to any remaining coplanar shared edges. This can be disabled by passing 'split' as false.
+The Loop algorithm, however, doesn't always provide uniform results as the vertices are skewed toward the most used vertex positions. A triangle box (like BoxGeometry for example) will favor the corners. To alleviate this issue, this implementation includes an initial pass to split coplanar faces at their shared edges. It starts by splitting along the longest shared edge first, and then from that midpoint it splits to any remaining coplanar shared edges. This can be disabled by passing 'split' as false.
 
-Also by default, this implementation inserts new uv coordinates, but does not average them using the Loop
-algorithm. In some cases (usually in round-ish geometries), this will produce undesired results, a noticeable
-tearing will occur. In such cases, try passing 'uvSmooth' as true to enable uv averaging.
+Also by default, this implementation inserts new uv coordinates, but does not average them using the Loop algorithm. In some cases (usually in round-ish geometries) this will produce undesired results, a noticeable tearing will occur. In such cases, try passing 'uvSmooth' as true to enable uv averaging.
+
+## Calling
+
+LoopSubdivision.apply(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity)
+
+- [bufferGeometry]() : BufferGeometry - existing three.js BufferGeometry object.
+- [iterations]() : Int (optional) - total passes of subdivision to apply, generally between 1 to 5.
+- [split]() : Boolean (optional) - split coplanar faces at their shared edges before subdividing?
+- [uvSmooth]() : Boolean (optional) - smooth uv coordinates during subdivision?
+- [flatOnly]() : Boolean (optioanl) - subdivide triangles but do not apply smoothing?
+- [maxTriangles]() : Number (optional) - limits subdivision to meshes with less than this number of triangles.
 
 ## Usage
 
-This code creates a cube with smoothed geometry and adds it to a Scene.
+To create subdivided geometry, use the static function apply(). The following code creates a cube with smoothed geometry and adds it to a three.js scene.
 
     import * as THREE from 'three';
     import { LoopSubdivision } from 'LoopSubdivision.js';

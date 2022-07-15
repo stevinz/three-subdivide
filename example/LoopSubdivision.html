@@ -47,8 +47,8 @@
 			let geometrySmooth, meshSmooth, wireSmooth;
 
 			const params = {
-				geometry: 'box',
-				iterations: 2,
+				geometry: 'Box',
+				iterations: 3,
 				split: true,
 				uvSmooth: false,
 				flatOnly: false,
@@ -86,7 +86,7 @@
 				texture = new THREE.TextureLoader().load('./textures/uv_grid_opengl.jpg', () => {
 					render();
 				});
-				material = new THREE.MeshBasicMaterial({ map: texture });
+				material = new THREE.MeshBasicMaterial({ map: texture, side: THREE.DoubleSide });
 				wireMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, depthTest: true, wireframe: true });
 				geometryNormal = getGeometry();
 				geometrySmooth =  getGeometry();
@@ -96,10 +96,8 @@
 				wireSmooth = new THREE.Mesh(new THREE.BufferGeometry(), wireMaterial);
 				wireNormal.visible = false;
 				wireSmooth.visible = false;
-				meshNormal.position.set(-0.7, 0, 0); meshSmooth.position.set( 0.7, 0, 0);
-				wireNormal.position.set(-0.7, 0, 0); wireSmooth.position.set( 0.7, 0, 0);
-				wireNormal.scale.set(1.01, 1.01, 1.01);
-				wireSmooth.scale.set(1.01, 1.01, 1.01);
+				meshNormal.position.set(-0.7, 0, 0); meshSmooth.position.set(0.7, 0, 0);
+				wireNormal.position.set(-0.7, 0, 0); wireSmooth.position.set(0.7, 0, 0);
 				scene.add(meshNormal, meshSmooth);
 				scene.add(wireNormal, wireSmooth);
 				
@@ -110,7 +108,7 @@
 				const gui = new GUI({});
 
 				const folder1 = gui.addFolder('Subdivide Params');
-				folder1.add(params, 'geometry', [ 'box', 'cylinder', 'sphere' ]).onFinishChange(updateMeshes);
+				folder1.add(params, 'geometry', [ 'Box', 'Capsule', 'Circle', 'Cone', 'Cylinder', 'Dodecahedron', 'Icosahedron', 'Octahedron', 'Plane', 'Ring', 'Sphere', 'Tetrahedron', 'Torus' ]).onFinishChange(updateMeshes);
 				folder1.add(params, 'iterations').min(0).max(5).step(1).onFinishChange(updateMeshes);
 				folder1.add(params, 'split').onFinishChange(updateMeshes);
 				folder1.add(params, 'uvSmooth').onFinishChange(updateMeshes);
@@ -125,8 +123,18 @@
 			function getGeometry() {
 				switch (params.geometry.toLowerCase()) {
 					case 'box': return new THREE.BoxGeometry();
+					case 'capsule': return new THREE.CapsuleGeometry(0.5, 1, 2, 6);
+					case 'circle': return new THREE.CircleGeometry(0.6, 10);
+					case 'cone': return new THREE.ConeGeometry(0.6, 1.5, 5, 3);
 					case 'cylinder': return new THREE.CylinderGeometry(0.5, 0.5, 1);
+					case 'dodecahedron': return new THREE.DodecahedronGeometry(0.6);
+					case 'icosahedron': return new THREE.IcosahedronGeometry(0.6);
+					case 'octahedron': return new THREE.OctahedronGeometry(0.7);
+					case 'plane': return new THREE.PlaneGeometry();
+					case 'ring': return new THREE.RingGeometry(0.3, 0.6, 10);
 					case 'sphere': return new THREE.SphereGeometry(0.6, 8, 4);
+					case 'tetrahedron': return new THREE.TetrahedronGeometry(0.8);
+					case 'torus': return new THREE.TorusGeometry(0.48, 0.24, 4, 6);
 				}
 			}
 
@@ -145,6 +153,9 @@
 				wireSmooth.geometry = meshSmooth.geometry.clone();
 				wireNormal.visible = params.wireframe;
 				wireSmooth.visible = params.wireframe;
+				wireNormal.scale.set(1.01, 1.01, 1.01);
+				wireSmooth.scale.set(1.01, 1.01, 1.01);
+
 				render();
 			}
 
