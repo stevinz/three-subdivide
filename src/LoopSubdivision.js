@@ -174,9 +174,9 @@ class LoopSubdivision {
 
             // Calculate Normals
             calcNormal(_normal, _vector0, _vector1, _vector2);
-            norAttribute.setXYZ(i + 0, _normal.x, _normal.y, _normal.z);
-            norAttribute.setXYZ(i + 1, _normal.x, _normal.y, _normal.z);
-            norAttribute.setXYZ(i + 2, _normal.x, _normal.y, _normal.z);
+            // norAttribute.setXYZ(i + 0, _normal.x, _normal.y, _normal.z);
+            // norAttribute.setXYZ(i + 1, _normal.x, _normal.y, _normal.z);
+            // norAttribute.setXYZ(i + 2, _normal.x, _normal.y, _normal.z);
             const normalHash = hashFromVector(_normal);
 
             // Vertex Hashes
@@ -389,7 +389,6 @@ class LoopSubdivision {
         const indexToPos = [];          // Position only hash stored for each index
         const existingNeighbors = {};   // Position hash mapped to Sets of existing vertex neighbors
         const flatOpposites = {};       // Position hash mapped to Sets of new edge point opposites
-        const newNormals = []; // to hold new normals of vertex
 
         ///// Existing Vertex Hashes
         for (let i = 0; i < vertexCount; i += 3) {
@@ -440,10 +439,12 @@ class LoopSubdivision {
             let index = 0;
             for (let i = 0; i < flat.attributes.position.count; i += 3) {
 
-                if (attributeName === 'normal') {
-                    for (let v = 0; v < 3; v++) _vertex[v].copy(newNormals[i / 3]);
+                if (attributeName === 'uv' && ! uvSmooth) {
+                    for (let v = 0; v < 3; v++) {
+                        _vertex[v].fromBufferAttribute(flatAttribute, i + v);
+                    }
 
-                } else if (attributeName === 'position' || attributeName === 'color' || (attributeName === 'uv' && uvSmooth)) {
+                } else { // 'normal', 'position', 'color'
                     for (let v = 0; v < 3; v++) {
                         _vertex[v].fromBufferAttribute(flatAttribute, i + v);
                         _position[v].fromBufferAttribute(flatPosition, i + v);
@@ -489,20 +490,11 @@ class LoopSubdivision {
                             });
                         }
                     }
-
-                } else {
-                    for (let v = 0; v < 3; v++) _vertex[v].fromBufferAttribute(flatAttribute, i + v);
                 }
 
                 // Add New Triangle Position
                 setTriangle(floatArray, index, flatAttribute.itemSize, _vertex[0], _vertex[1], _vertex[2]);
                 index += (flatAttribute.itemSize * 3);
-
-                // Calculate Normals
-                if (attributeName === 'position') {
-                    calcNormal(_normal, _vertex[0], _vertex[1], _vertex[2]);
-                    newNormals.push({ x: _normal.x, y: _normal.y, z: _normal.z });
-                }
             }
 
             loop.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, flatAttribute.itemSize));
