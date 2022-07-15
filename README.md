@@ -4,7 +4,7 @@ Smooth subdivision surface modifier for use with three.js BufferGeometry. This m
 
 ## Example
 
-- [Check out Loop Subdivision in action!]()
+- [Check out Loop Subdivision in action!](https://stevinz.github.io/three-subdivide)
 
 ## Info
 
@@ -22,7 +22,18 @@ tearing will occur. In such cases, try passing 'uvSmooth' as true to enable uv a
 
 ## Usage
 
-    import { LoopSubdivisiuon } from 'LoopSubdivision.js';
+This code creates a cube with smoothed geometry and adds it to a Scene.
+
+    import * as THREE from 'three';
+    import { LoopSubdivision } from 'LoopSubdivision.js';
+
+    const geometry = LoopSubdivision.apply(new THREE.BoxGeometry());
+
+    const material = new THREE.MeshNormalMaterial();
+    const mesh = new THREE.Mesh(geometry, material);
+
+    const scene = new THREE.Scene();
+    scene.add(mesh);
 
 ----
 ## License
