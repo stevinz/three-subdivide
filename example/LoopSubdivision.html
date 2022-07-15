@@ -123,10 +123,10 @@
 			function getGeometry() {
 				switch (params.geometry.toLowerCase()) {
 					case 'box': return new THREE.BoxGeometry();
-					case 'capsule': return new THREE.CapsuleGeometry(0.5, 1, 2, 6);
+					case 'capsule': return new THREE.CapsuleGeometry(0.5, 0.5, 3, 5);
 					case 'circle': return new THREE.CircleGeometry(0.6, 10);
-					case 'cone': return new THREE.ConeGeometry(0.6, 1.5, 5, 3);
-					case 'cylinder': return new THREE.CylinderGeometry(0.5, 0.5, 1);
+					case 'cone': return new THREE.ConeGeometry(0.6, 1.5, 5, 5);
+					case 'cylinder': return new THREE.CylinderGeometry(0.5, 0.5, 1, 5, 5);
 					case 'dodecahedron': return new THREE.DodecahedronGeometry(0.6);
 					case 'icosahedron': return new THREE.IcosahedronGeometry(0.6);
 					case 'octahedron': return new THREE.OctahedronGeometry(0.7);
