@@ -2,15 +2,13 @@
 
 This modifier uses the [Loop](https://en.wikipedia.org/wiki/Loop_subdivision_surface) (Charles Loop, 1987) subdivision surface algorithm to smooth modern three.js [BufferGeometry](https://threejs.org/docs/?q=geometry#api/en/core/BufferGeometry).
 
-<div style="text-align: center; font-size: 150%;">&mdash; <a href='https://stevinz.github.io/three-subdivide'>Live Demo</a> &mdash;</div>
+<p align="center"">&mdash; <a href='https://stevinz.github.io/three-subdivide'><font size="+1">Live Demo</font></a> &mdash;</p>
 
 ## Screenshot
 
-<center>
-<img width='400' src='example/textures/subdivded.jpg' alt='Loop Subdivision Demo'/>
-</center>
+<p align="center"><img width='400' src='example/textures/subdivded.jpg' alt='Loop Subdivision Demo' /></p>
 
-## Info
+## Background
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;At one point, [three.js](https://threejs.org/) included a subdivision surface modifier in the extended examples, it was removed in r125. This modifier was originally based on the [Catmull-Clark](https://en.wikipedia.org/wiki/Catmull%E2%80%93Clark_subdivision_surface) algorithm, which works best for geometry with convex coplanar n-gon faces. In three.js r60 the modifier was changed to use the Loop algorithm, which was designed to work better with triangle based meshes.
 
@@ -19,9 +17,11 @@ This modifier uses the [Loop](https://en.wikipedia.org/wiki/Loop_subdivision_sur
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Also by default, this implementation inserts new uv coordinates, but does not average them using the Loop algorithm. In some cases (usually in round-ish geometries) this will produce undesired results, a noticeable tearing will occur. In such cases, try passing 'uvSmooth' as true to enable uv averaging.
 
-## Calling
+## Apply
 
+```javascript
 LoopSubdivision.apply(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity)
+```
 
 - [bufferGeometry]() : BufferGeometry - existing three.js BufferGeometry object.
 - [iterations]() : Int (optional) - total passes of subdivision to apply, generally between 1 to 5.
