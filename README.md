@@ -28,6 +28,8 @@ LoopSubdivision.apply(bufferGeometry, iterations = 1, split = true, uvSmooth = f
 - [flatOnly]() : Boolean (optioanl) - subdivide triangles but do not apply smoothing?
 - [maxTriangles]() : Number (optional) - limits subdivision to meshes with less than this number of triangles.
 
+> NOTE: This modifier converts geometry to non-indexed before the subdivision algorithm is applied. If desired, you can use [BufferGeometryUtils.mergeVertices](https://threejs.org/docs/?q=buffer#examples/en/utils/BufferGeometryUtils.mergeVertices) to re-index geometry.
+
 ## Usage
 
 To create subdivided geometry, use the static function `apply()`. The following code creates a cube with smoothed geometry and adds it to a three.js `Scene`.
