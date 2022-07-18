@@ -106,13 +106,17 @@ class LoopSubdivision {
      * @returns {Object} Returns new, subdivided, three.js BufferGeometry object
     */
     static apply(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity) {
+        
+        // Check for 'position' Attribute
         if (bufferGeometry.attributes.position === undefined) {
             console.warn(`LoopSubdivision.modify(): Geometry missing required attribute, 'position'`); 
             return bufferGeometry;
         }
-        if (iterations < 1) return bufferGeometry;
-        if (split) bufferGeometry = LoopSubdivision.edgeSplit(bufferGeometry);
 
+        // Presplit
+        if (split) bufferGeometry = LoopSubdivision.edgeSplit(bufferGeometry);
+        
+        // Apply Subdivision
         for (let i = 0; i < iterations; i++) {
             let currentTriangles = bufferGeometry.attributes.position.count / 3;
             if (currentTriangles < maxTriangles) {
@@ -144,7 +148,7 @@ class LoopSubdivision {
         const split = new THREE.BufferGeometry();
 
         ///// Attributes
-        const attributeList = [ 'position', 'normal', 'uv', 'color' ]; // ALT: = Object.keys(existing.attributes);
+        const attributeList = gatherAttributes(existing);
         const vertexCount = existing.attributes.position.count;
         const posAttribute = existing.getAttribute('position');
         const norAttribute = existing.getAttribute('normal');
@@ -174,9 +178,6 @@ class LoopSubdivision {
 
             // Calculate Normals
             calcNormal(_normal, _vector0, _vector1, _vector2);
-            // norAttribute.setXYZ(i + 0, _normal.x, _normal.y, _normal.z);
-            // norAttribute.setXYZ(i + 1, _normal.x, _normal.y, _normal.z);
-            // norAttribute.setXYZ(i + 2, _normal.x, _normal.y, _normal.z);
             const normalHash = hashFromVector(_normal);
 
             // Vertex Hashes
@@ -326,7 +327,7 @@ class LoopSubdivision {
         const loop = new THREE.BufferGeometry();
 
         ///// Attributes
-        const attributeList = [ 'position', 'normal', 'uv', 'color' ]; // ALT: = Object.keys(existing.attributes);
+        const attributeList = gatherAttributes(existing);
         const vertexCount = existing.attributes.position.count;
 
         ///// Build Geometry
@@ -380,7 +381,7 @@ class LoopSubdivision {
         const loop = new THREE.BufferGeometry();
 
         ///// Attributes
-        const attributeList = [ 'position', 'normal', 'uv', 'color' ]; // ALT: = Object.keys(flat.attributes);
+        const attributeList = gatherAttributes(existing);
         const vertexCount = existing.attributes.position.count;
         const posAttribute = existing.getAttribute('position');
         const norAttribute = existing.getAttribute('normal');
@@ -559,6 +560,13 @@ function calcNormal(target, vec1, vec2, vec3) {
     _temp.subVectors(vec1, vec2);
     target.subVectors(vec2, vec3);
     target.cross(_temp).normalize();
+}
+
+function gatherAttributes(geometry) {
+    const desired = [ 'position', 'normal', 'uv' ];
+    const contains = Object.keys(geometry.attributes);
+    const attributeList = Array.from(new Set(desired.concat(contains)));
+    return attributeList;
 }
 
 function setTriangle(positions, index, step, vec0, vec1, vec2) {
