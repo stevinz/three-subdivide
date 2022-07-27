@@ -26,14 +26,14 @@
 //      was changed to use the Loop algorithm, which was designed to work better with triangle based meshes.
 //
 //      The Loop algorithm, however, doesn't always provide uniform results as the vertices are skewed toward
-//      the most used vertex positions. A triangle based box (like BoxGeometry for example) will favor the corners.
-//      To alleviate this issue, this implementation includes an initial pass to split coplanar faces at their
+//      the most used vertex positions. A triangle based box (e.g. BoxGeometry) will favor the corners. To
+//      alleviate this issue, this implementation includes an initial pass to split coplanar faces at their
 //      shared edges. It starts by splitting along the longest shared edge first, and then from that midpoint it
 //      splits to any remaining coplanar shared edges. This can be disabled by passing 'split' as false.
 //
 //      Also by default, this implementation inserts new uv coordinates, but does not average them using the Loop
-//      algorithm. In some cases (usually in round-ish geometries), this will produce undesired results, a noticeable
-//      tearing will occur. In such cases, try passing 'uvSmooth' as true to enable uv averaging.
+//      algorithm. In some cases (usually in round-ish geometries), this will produce undesired results, a
+//      noticeable tearing will occur. In such cases, try passing 'uvSmooth' as true to enable uv averaging.
 //      
 //  Notes
 //      - This modifier works best with geometry whose triangles share edges AND edge vertices. See diagram below.
@@ -97,19 +97,19 @@ class LoopSubdivision {
     /**
      * Applies Loop subdivision modifier to geometry
      * 
-     * @param {Object} bufferGeometry Three.js geometry to be subdivided
-     * @param {Number} iterations How many times to run subdividion
-     * @param {Boolean} split Should coplanar faces be divided along shared edges before running Loop subdivision
-     * @param {Boolean} uvSmooth Should UV values be averaged during subdivision
-     * @param {Boolean} flatOnly If true, subdivision generates triangles, but does not modify positions
-     * @param {Number} maxTriangles If geometry contains more than this many triangles, subdivision will not contiunue
+     * @param {Object} bufferGeometry - Three.js geometry to be subdivided
+     * @param {Number} iterations - How many times to run subdividion
+     * @param {Boolean} split - Should coplanar faces be divided along shared edges before running Loop subdivision
+     * @param {Boolean} uvSmooth - Should UV values be averaged during subdivision
+     * @param {Boolean} flatOnly - If true, subdivision generates triangles, but does not modify positions
+     * @param {Number} maxTriangles - If geometry contains more than this many triangles, subdivision will not contiunue
      * @returns {Object} Returns new, subdivided, three.js BufferGeometry object
     */
     static apply(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity) {
         
         // Check for 'position' Attribute
         if (bufferGeometry.attributes.position === undefined) {
-            console.warn(`LoopSubdivision.modify(): Geometry missing required attribute, 'position'`); 
+            console.warn(`LoopSubdivision.apply(): Geometry missing required attribute, 'position'`); 
             return bufferGeometry;
         }
 
@@ -137,8 +137,8 @@ class LoopSubdivision {
 
     /**
      * Applies one iteration of split subdivision. Splits all triangles at edges shared by coplanar triangles.
-     * Starts by splitting at longest shared edge, followed by splitting from that new center edge point to the center
-     * of any other shared edges.
+     * Starts by splitting at longest shared edge, followed by splitting from that new center edge point to the
+     * center of any other shared edges.
      */
     static edgeSplit(geometry) {
 
@@ -445,7 +445,7 @@ class LoopSubdivision {
                         _vertex[v].fromBufferAttribute(flatAttribute, i + v);
                     }
 
-                } else { // 'normal', 'position', 'color'
+                } else { // 'normal', 'position', 'color', etc...
                     for (let v = 0; v < 3; v++) {
                         _vertex[v].fromBufferAttribute(flatAttribute, i + v);
                         _position[v].fromBufferAttribute(flatPosition, i + v);
@@ -523,7 +523,7 @@ function fuzzy(a, b, tolerance = 0.00001) {
 /** Generates hash strong from Number */
 function hashFromNumber(num, shift = _positionShift) {
     let roundedNumber = round(num * shift);
-    if (roundedNumber == 0) roundedNumber = 0; // Prevent -0 (signed 0 can effect Math.atan2(), etc.)
+    if (roundedNumber == 0) roundedNumber = 0; /* prevent -0 (signed 0 can effect Math.atan2(), etc.) */
     return `${roundedNumber}`;
 }
 
