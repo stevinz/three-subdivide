@@ -35,7 +35,7 @@ import { LoopSubdivision } from 'three-subdivide';
 
 - Option 3: Import directly from CDN...
 ```javascript
-import { LoopSubdivision } from 'https://unpkg.com/three-subdivide@1.0.1/build/index.module.js';
+import { LoopSubdivision } from 'https://unpkg.com/three-subdivide/build/index.module.js';
 ```
 
 ## Usage
