@@ -10,13 +10,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////*/
 //
-//  Subdivision Surface Functions
-//      apply               Applies Loop subdivision to BufferGeometry, returns new BufferGeometry
+//  Functions
+//      modify              Applies Loop subdivision to BufferGeometry, returns new BufferGeometry
 //      edgeSplit           Splits all triangles at edges shared by coplanar triangles
 //      flat                One iteration of Loop subdivision, without point averaging
 //      smooth              One iteration of Loop subdivision, with point averaging
 //
-//  More Info
+//  Info
 //      This modifier uses the Loop (Charles Loop, 1987) subdivision surface algorithm to smooth
 //      modern three.js BufferGeometry.
 //
@@ -35,7 +35,13 @@
 //      algorithm. In some cases (usually in round-ish geometries), this will produce undesired results, a
 //      noticeable tearing will occur. In such cases, try passing 'uvSmooth' as true to enable uv averaging.
 //      
-//  Notes
+//  Note(s)
+//      - This modifier returns a new BufferGeometry instance, it does not dispose() of the old geometry.
+//
+//      - This modifier returns a NonIndexed geometry. An Indexed geometry can be created by using the
+//        BufferGeometryUtils.mergeVertices() function, see:
+//        https://threejs.org/docs/?q=buffer#examples/en/utils/BufferGeometryUtils.mergeVertices
+//
 //      - This modifier works best with geometry whose triangles share edges AND edge vertices. See diagram below.
 //
 //          OKAY          NOT OKAY
@@ -105,11 +111,11 @@ class LoopSubdivision {
      * @param {Number} maxTriangles - If geometry contains more than this many triangles, subdivision will not contiunue
      * @returns {Object} Returns new, subdivided, three.js BufferGeometry object
     */
-    static apply(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity) {
+    static modify(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity) {
         
         // Check for 'position' Attribute
         if (bufferGeometry.attributes.position === undefined) {
-            console.warn(`LoopSubdivision.apply(): Geometry missing required attribute, 'position'`); 
+            console.warn(`LoopSubdivision.modify(): Geometry missing required attribute, 'position'`); 
             return bufferGeometry;
         }
 

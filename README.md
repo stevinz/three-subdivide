@@ -17,9 +17,9 @@ This modifier uses the [Loop](https://en.wikipedia.org/wiki/Loop_subdivision_sur
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Also by default, this implementation inserts new UV coordinates, but does not average them using the Loop algorithm. In some cases (usually in round-ish geometries) this will produce undesired results, a noticeable tearing will occur. In such cases, try passing 'uvSmooth' as true to enable UV averaging.
 
-## Apply
+## Modify
 
-LoopSubdivision.apply(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity)
+LoopSubdivision.modify(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity)
 
 - [bufferGeometry]() : BufferGeometry - existing three.js BufferGeometry object.
 - [iterations]() : Int (optional) - total passes of subdivision to apply, generally between 1 to 5.
@@ -32,13 +32,13 @@ LoopSubdivision.apply(bufferGeometry, iterations = 1, split = true, uvSmooth = f
 
 ## Usage
 
-To create subdivided geometry, use the static function `apply()`. The following code creates a cube with smoothed geometry and adds it to a three.js `Scene`.
+To create subdivided geometry, use the static function `modify()`. The following code creates a cube with smoothed geometry and adds it to a three.js `Scene`.
 
 ```javascript
 import * as THREE from 'three';
 import { LoopSubdivision } from 'LoopSubdivision.js';
 
-const geometry = LoopSubdivision.apply(new THREE.BoxGeometry());
+const geometry = LoopSubdivision.modify(new THREE.BoxGeometry());
 
 const material = new THREE.MeshNormalMaterial();
 const mesh = new THREE.Mesh(geometry, material);

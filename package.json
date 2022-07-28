@@ -1,0 +1,29 @@
+{
+    "name": "three-subdivide",
+    "version": "1.0.0",
+    "description": "Smooth subdivision surface modifier for use with three.js BufferGeometry.",
+    "module": "src/index.js",
+    "main": "build/index.umd.cjs",
+    "type": "module",
+    "keywords": [
+        "subdivision",
+        "buffergeometry",
+        "modifier"
+    ],
+    "homepage": "https://github.com/stevinz/three-subdivide",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/stevinz/three-subdivide.git"
+    },
+    "author": "Stephens Nunnally <@stevinz>",
+    "license": "MIT",
+    "private": false,
+    "engines": {
+      "node": ">=6.0.0"
+    },
+    "engineStrict": true,
+
+    "peerDependencies": {
+        "three": ">= 0.123.0"
+    }
+}
