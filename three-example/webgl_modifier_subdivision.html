@@ -10,7 +10,7 @@
 
 		<div id="info">
 			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - modifier - <a href="https://github.com/stevinz/three-subdivide" target="_blank" rel="noopener">subdivision</a><br/>
-			See external <a href="https://github.com/stevinz/three-subdivide" target="_blank" rel="noopener">main project repository</a> for more information on subdivision surfaces.
+			See external <a href="https://github.com/stevinz/three-subdivide" target="_blank" rel="noopener">three-subdivide</a> for more information on subdivision surfaces.
 		</div>
 
 		<!-- Import maps polyfill -->
@@ -98,7 +98,7 @@
 
 				window.addEventListener( 'resize', onWindowResize );
 
-				const geomTypes = [ 'Box', 'Capsule', 'Circle', 'Cone', 'Cylinder', 'Dodecahedron', 'Icosahedron', 'Octahedron', 'Plane', 'Ring', 'Sphere', 'Tetrahedron', 'Torus' ];
+				const geomTypes = [ 'Box', 'Capsule', 'Circle', 'Cone', 'Cylinder', 'Dodecahedron', 'Icosahedron', 'Lathe', 'Octahedron', 'Plane', 'Ring', 'Sphere', 'Tetrahedron', 'Torus', 'TorusKnot' ];
 
 				const gui = new GUI();
 
@@ -160,6 +160,22 @@
 					case 'icosahedron':
 						return new THREE.IcosahedronGeometry( 0.6 );
 
+					case 'lathe':
+
+						// Sine Wave
+
+						const points = [];
+						for ( let i = 0; i < 65; i += 5 ) {
+							let x = ( Math.sin( i * 0.2 ) * Math.sin( i * 0.1 ) * 15 + 50 ) * 1.2;
+							let y = ( i - 5 ) * 3;
+							points.push( new THREE.Vector2( x * 0.0075, y * 0.005 ) );
+						}
+
+						const latheGeometry = new THREE.LatheGeometry( points, 4 );
+						latheGeometry.center();
+
+						return latheGeometry;
+
 					case 'octahedron':
 						return new THREE.OctahedronGeometry( 0.7 );
 
@@ -177,6 +193,9 @@
 
 					case 'torus':
 						return new THREE.TorusGeometry( 0.48, 0.24, 4, 6 );
+
+					case 'torusknot':
+						return new THREE.TorusKnotGeometry( 0.38, 0.18, 20, 4 );
 
 				}
 
