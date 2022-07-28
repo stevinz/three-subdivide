@@ -91,7 +91,13 @@
 
 				} );
 
-				meshMaterial = new THREE.MeshBasicMaterial( { map: texture, side: THREE.DoubleSide } );
+				meshMaterial = new THREE.MeshBasicMaterial( {
+					map: texture,
+					polygonOffset: true,
+    				polygonOffsetFactor: 1, // positive value pushes polygon further away
+    				polygonOffsetUnits: 1,
+					side: THREE.DoubleSide
+				} );
 				meshNormal = new THREE.Mesh( new THREE.BufferGeometry(), meshMaterial );
 				meshSmooth = new THREE.Mesh( new THREE.BufferGeometry(), meshMaterial );
 				meshNormal.position.set( - 0.7, 0, 0 );
@@ -178,6 +184,7 @@
 						// Sine Wave
 
 						const points = [];
+
 						for ( let i = 0; i < 65; i += 5 ) {
 
 							let x = ( Math.sin( i * 0.2 ) * Math.sin( i * 0.1 ) * 15 + 50 ) * 1.2;
@@ -232,11 +239,7 @@
 				wireNormal.geometry = meshNormal.geometry.clone();
 				wireSmooth.geometry = meshSmooth.geometry.clone();
 
-				wireNormal.visible = params.wireframe;
-				wireSmooth.visible = params.wireframe;
-
-				wireNormal.scale.set( 1.01, 1.01, 1.01 );
-				wireSmooth.scale.set( 1.01, 1.01, 1.01 );
+				wireNormal.visible = wireSmooth.visible = params.wireframe;
 
 				render();
 

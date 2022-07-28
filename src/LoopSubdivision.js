@@ -1,11 +1,11 @@
 /** /////////////////////////////////////////////////////////////////////////////////
-// 
+//
 // @description Loop Subdivision Surface
 // @about       Smooth subdivision surface modifier for use with three.js BufferGeometry
 // @author      Stephens Nunnally <@stevinz>
 // @license     MIT - Copyright (c) 2022 Stephens Nunnally and Scidian Software
 // @source      https://github.com/stevinz/three-subdivide
-// 
+//
 //      See end of file for license details and acknowledgements
 //
 ///////////////////////////////////////////////////////////////////////////////////*/
@@ -32,9 +32,9 @@
 //      splits to any remaining coplanar shared edges. This can be disabled by passing 'split' as false.
 //
 //      Also by default, this implementation inserts new uv coordinates, but does not average them using the Loop
-//      algorithm. In some cases (usually in round-ish geometries), this will produce undesired results, a
+//      algorithm. In some cases (often in flat geometries) this will produce undesired results, a
 //      noticeable tearing will occur. In such cases, try passing 'uvSmooth' as true to enable uv averaging.
-//      
+//
 //  Note(s)
 //      - This modifier returns a new BufferGeometry instance, it does not dispose() of the old geometry.
 //
@@ -95,14 +95,14 @@ const _triangle = new THREE.Triangle();
 
 /** Loop subdivision surface modifier for use with modern three.js BufferGeometry */
 class LoopSubdivision {
-    
+
     /////////////////////////////////////////////////////////////////////////////////////
     /////   Modify
     ////////////////////
 
     /**
      * Applies Loop subdivision modifier to geometry
-     * 
+     *
      * @param {Object} bufferGeometry - Three.js geometry to be subdivided
      * @param {Number} iterations - How many times to run subdividion
      * @param {Boolean} split - Should coplanar faces be divided along shared edges before running Loop subdivision
@@ -112,16 +112,16 @@ class LoopSubdivision {
      * @returns {Object} Returns new, subdivided, three.js BufferGeometry object
     */
     static modify(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity) {
-        
+
         // Check for 'position' Attribute
         if (bufferGeometry.attributes.position === undefined) {
-            console.warn(`LoopSubdivision.modify(): Geometry missing required attribute, 'position'`); 
+            console.warn(`LoopSubdivision.modify(): Geometry missing required attribute, 'position'`);
             return bufferGeometry;
         }
 
         // Presplit
         if (split) bufferGeometry = LoopSubdivision.edgeSplit(bufferGeometry);
-        
+
         // Apply Subdivision
         for (let i = 0; i < iterations; i++) {
             let currentTriangles = bufferGeometry.attributes.position.count / 3;
@@ -326,7 +326,7 @@ class LoopSubdivision {
 
     /** Applies one iteration of Loop (flat) subdivision (1 triangle split into 4 triangles) */
     static flat(geometry) {
-        
+
         ///// Geometries
         if (! verifyGeometry(geometry)) return geometry;
         const existing = (geometry.index !== null) ? geometry.toNonIndexed() : geometry.clone();
@@ -412,7 +412,7 @@ class LoopSubdivision {
                 indexToPos.push(positionHash);
                 indexToHash.push(pointHash);
             }
-            
+
             // Neighbors (Existing Geometry)
             addToObjectSet(existingNeighbors, indexToPos[i + 0], indexToHash[i + 1]);
             addToObjectSet(existingNeighbors, indexToPos[i + 0], indexToHash[i + 2]);
@@ -420,7 +420,7 @@ class LoopSubdivision {
             addToObjectSet(existingNeighbors, indexToPos[i + 1], indexToHash[i + 2]);
             addToObjectSet(existingNeighbors, indexToPos[i + 2], indexToHash[i + 0]);
             addToObjectSet(existingNeighbors, indexToPos[i + 2], indexToHash[i + 1]);
-        
+
             // Midpoints / Opposites
             _vec0to1.copy(_vertex[0]).add(_vertex[1]).divideScalar(2.0);
             _vec1to2.copy(_vertex[1]).add(_vertex[2]).divideScalar(2.0);
@@ -459,7 +459,7 @@ class LoopSubdivision {
                         let positionHash = hashFromVector(_position[v]);
                         let neighbors = existingNeighbors[positionHash];
                         let opposites = flatOpposites[positionHash]
-                        
+
                         ///// Adjust Source Vertex
                         if (neighbors && (neighbors instanceof Set)) {
                             const k = neighbors.size;
@@ -469,7 +469,7 @@ class LoopSubdivision {
 
                             ///// Warren's Formula
                             // const beta = (k > 3) ? 3 / (8 * k) : ((k === 3) ? 3 / 16 : 0);
-                            
+
                             ///// Stevinz' Formula
                             // const beta = 0.5 / k;
 
@@ -580,7 +580,7 @@ function setTriangle(positions, index, step, vec0, vec1, vec2) {
         positions[index + 0 + (step * 0)] = vec0.x;
         positions[index + 0 + (step * 1)] = vec1.x;
         positions[index + 0 + (step * 2)] = vec2.x;
-    } 
+    }
     if (step >= 2) {
         positions[index + 1 + (step * 0)] = vec0.y;
         positions[index + 1 + (step * 1)] = vec1.y;
@@ -632,7 +632,7 @@ export { LoopSubdivision };
 /////////////////////////////////////////////////////////////////////////////////////
 /////   Original three.js SubdivisionModifier
 /////////////////////////////////////////////////////////////////////////////////////
-//  
+//
 // Loop, r124
 //      https://github.com/mrdoob/three.js/blob/r124/examples/jsm/modifiers/SubdivisionModifier.js
 // Catmull-Clark, r59
