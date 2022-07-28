@@ -19,13 +19,13 @@ This modifier uses the [Loop](https://en.wikipedia.org/wiki/Loop_subdivision_sur
 
 ## Install
 
-- Option 1: Copy file `LoopSubdivision.js`, then import from file...
+- Option 1: Copy file `LoopSubdivision.js`, import from file...
 
 ```javascript
 import { LoopSubdivision } from 'LoopSubdivision.js';
 ```
 
-- Option 2: Install from npm, import from 'three-subdivide'
+- Option 2: Install from [npm](https://www.npmjs.com/package/three-subdivide), import from 'three-subdivide'...
 ```
 npm install three-subdivide
 ```
@@ -33,7 +33,7 @@ npm install three-subdivide
 import { LoopSubdivision } from 'three-subdivide';
 ```
 
-- Option 3: Use directly from CDN
+- Option 3: Import directly from CDN...
 ```javascript
 import { LoopSubdivision } from 'https://unpkg.com/three-subdivide@1.0.1/build/index.module.js';
 ```
