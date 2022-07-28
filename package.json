@@ -1,7 +1,7 @@
 {
   "name": "three-subdivide",
-  "version": "1.0.0",
-  "description": "Smooth subdivision surface modifier for use with three.js BufferGeometry.",  
+  "version": "1.0.1",
+  "description": "Smooth subdivision surface modifier for use with three.js BufferGeometry.",
   "module": "src/index.js",
   "main": "build/index.umd.cjs",
   "type": "module",

@@ -30,6 +30,27 @@ LoopSubdivision.modify(bufferGeometry, iterations = 1, split = true, uvSmooth = 
 
 > NOTE: This modifier converts geometry to non-indexed before the subdivision algorithm is applied. If desired, you can use [BufferGeometryUtils.mergeVertices](https://threejs.org/docs/?q=buffer#examples/en/utils/BufferGeometryUtils.mergeVertices) to re-index geometry.
 
+## Install
+
+- Option 1: Copy file `LoopSubdivision.js`, then import from file...
+
+```javascript
+import { LoopSubdivision } from 'LoopSubdivision.js';
+```
+
+- Option 2: Install from npm, import from 'three-subdivide'
+```
+npm install three-subdivide
+```
+```javascript
+import { LoopSubdivision } from 'three-subdivide';
+```
+
+- Option 3: Use directly from CDN
+```javascript
+import { LoopSubdivision } from 'https://unpkg.com/three-subdivide@1.0.1/build/index.module.js';
+```
+
 ## Usage
 
 To create subdivided geometry, use the static function `modify()`. The following code creates a cube with smoothed geometry and adds it to a three.js `Scene`.
@@ -47,7 +68,6 @@ const scene = new THREE.Scene();
 scene.add(mesh);
 ```
 
-----
 ## License
 
 Subdivide is released under the terms of the MIT license, so it is free to use in your free or commercial projects.
