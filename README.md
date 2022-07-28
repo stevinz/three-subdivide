@@ -17,19 +17,6 @@ This modifier uses the [Loop](https://en.wikipedia.org/wiki/Loop_subdivision_sur
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Also by default, this implementation inserts new UV coordinates, but does not average them using the Loop algorithm. In some cases (usually in round-ish geometries) this will produce undesired results, a noticeable tearing will occur. In such cases, try passing 'uvSmooth' as true to enable UV averaging.
 
-## Modify
-
-LoopSubdivision.modify(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity)
-
-- [bufferGeometry]() : BufferGeometry - existing three.js BufferGeometry object.
-- [iterations]() : Int (optional) - total passes of subdivision to apply, generally between 1 to 5.
-- [split]() : Boolean (optional) - split coplanar faces at their shared edges before subdividing?
-- [uvSmooth]() : Boolean (optional) - smooth UV coordinates during subdivision?
-- [flatOnly]() : Boolean (optioanl) - subdivide triangles but do not apply smoothing?
-- [maxTriangles]() : Number (optional) - limits subdivision to meshes with less than this number of triangles.
-
-> NOTE: This modifier converts geometry to non-indexed before the subdivision algorithm is applied. If desired, you can use [BufferGeometryUtils.mergeVertices](https://threejs.org/docs/?q=buffer#examples/en/utils/BufferGeometryUtils.mergeVertices) to re-index geometry.
-
 ## Install
 
 - Option 1: Copy file `LoopSubdivision.js`, then import from file...
@@ -67,6 +54,19 @@ const mesh = new THREE.Mesh(geometry, material);
 const scene = new THREE.Scene();
 scene.add(mesh);
 ```
+
+## Modify
+
+LoopSubdivision.modify(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity)
+
+- [bufferGeometry]() : BufferGeometry - existing three.js BufferGeometry object.
+- [iterations]() : Int (optional) - total passes of subdivision to apply, generally between 1 to 5.
+- [split]() : Boolean (optional) - split coplanar faces at their shared edges before subdividing?
+- [uvSmooth]() : Boolean (optional) - smooth UV coordinates during subdivision?
+- [flatOnly]() : Boolean (optioanl) - subdivide triangles but do not apply smoothing?
+- [maxTriangles]() : Number (optional) - limits subdivision to meshes with less than this number of triangles.
+
+> NOTE: This modifier converts geometry to non-indexed before the subdivision algorithm is applied. If desired, you can use [BufferGeometryUtils.mergeVertices](https://threejs.org/docs/?q=buffer#examples/en/utils/BufferGeometryUtils.mergeVertices) to re-index geometry.
 
 ## License
 
