@@ -10,11 +10,9 @@
 
 		<div id="info">
 			<a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - modifier - <a href="https://github.com/stevinz/three-subdivide" target="_blank" rel="noopener">subdivision</a><br/>
-			See external <a href="https://github.com/stevinz/three-subdivide" target="_blank" rel="noopener">main project repository</a> for more information.
+			See external <a href="https://github.com/stevinz/three-subdivide" target="_blank" rel="noopener">main project repository</a> for more information on subdivision surfaces.
 		</div>
 
-		<!-- ///// -->
-		
 		<!-- Import maps polyfill -->
 		<!-- Remove this when import maps will be widely supported -->
 		<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
@@ -23,20 +21,17 @@
 			{
 				"imports": {
 					"three": "../build/three.module.js",
-					"three/examples/": "./",
 					"three-subdivide": "https://unpkg.com/three-subdivide/build/index.module.js"
 				}
 			}
 		</script>
 
-		<!-- ///// -->
-
 		<script type="module">
 
 			import * as THREE from 'three';
 			import { LoopSubdivision } from 'three-subdivide';
-			import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-			import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
+			import { OrbitControls } from './jsm/controls/OrbitControls.js';
+			import { GUI } from './jsm/libs/lil-gui.module.min.js';
 
 			let renderer, scene, camera;
 			let texture;
@@ -80,7 +75,7 @@
 					texture.wrapT = THREE.RepeatWrapping;
 
 					render();
-					
+
 				} );
 
 				meshMaterial = new THREE.MeshBasicMaterial( { map: texture, side: THREE.DoubleSide } );
@@ -98,7 +93,7 @@
 				wireNormal.position.copy( meshNormal.position );
 				wireSmooth.position.copy( meshSmooth.position );
 				scene.add( wireNormal, wireSmooth );
-				
+
 				updateMeshes();
 
 				window.addEventListener( 'resize', onWindowResize );
@@ -108,7 +103,7 @@
 				const gui = new GUI();
 
 				const folder1 = gui.addFolder( 'Subdivide Params' );
-				const geomController = folder1.add( params, 'geometry', geomTypes ).onFinishChange( ( event ) => {
+				const geomController = folder1.add( params, 'geometry', geomTypes ).onFinishChange( () => {
 
 					const geom = params.geometry.toLowerCase();
 
@@ -122,7 +117,7 @@
 				folder1.add( params, 'iterations' ).min( 0 ).max( 5 ).step( 1 ).onFinishChange( updateMeshes );
 				const splitController = folder1.add( params, 'split' ).onFinishChange( updateMeshes );
 				const smoothController = folder1.add( params, 'uvSmooth' ).onFinishChange( updateMeshes );
-				folder1.add( params, 'flatOnly' ).onFinishChange (updateMeshes );
+				folder1.add( params, 'flatOnly' ).onFinishChange ( updateMeshes );
 				folder1.add( params, 'maxTriangles' ).onFinishChange( updateMeshes );
 
 				const folder2 = gui.addFolder( 'View' );
@@ -143,46 +138,46 @@
 			function getGeometry() {
 
 				switch ( params.geometry.toLowerCase() ) {
-					
+
 					case 'box':
 						return new THREE.BoxGeometry();
-					
+
 					case 'capsule':
 						return new THREE.CapsuleGeometry( 0.5, 0.5, 3, 5 );
-					
+
 					case 'circle':
 						return new THREE.CircleGeometry( 0.6, 10 );
-					
+
 					case 'cone':
 						return new THREE.ConeGeometry( 0.6, 1.5, 5, 5 );
-					
+
 					case 'cylinder':
 						return new THREE.CylinderGeometry( 0.5, 0.5, 1, 5, 5 );
-					
+
 					case 'dodecahedron':
 						return new THREE.DodecahedronGeometry( 0.6 );
-					
+
 					case 'icosahedron':
 						return new THREE.IcosahedronGeometry( 0.6 );
-					
+
 					case 'octahedron':
 						return new THREE.OctahedronGeometry( 0.7 );
-					
+
 					case 'plane':
 						return new THREE.PlaneGeometry();
-					
+
 					case 'ring':
 						return new THREE.RingGeometry( 0.3, 0.6, 10 );
-					
+
 					case 'sphere':
 						return new THREE.SphereGeometry( 0.6, 8, 4 );
-					
+
 					case 'tetrahedron':
 						return new THREE.TetrahedronGeometry( 0.8 );
 
 					case 'torus':
 						return new THREE.TorusGeometry( 0.48, 0.24, 4, 6 );
-						
+
 				}
 
 			}
