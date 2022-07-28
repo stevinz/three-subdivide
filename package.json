@@ -1,29 +1,48 @@
 {
-    "name": "three-subdivide",
-    "version": "1.0.0",
-    "description": "Smooth subdivision surface modifier for use with three.js BufferGeometry.",
-    "module": "src/index.js",
-    "main": "build/index.umd.cjs",
-    "type": "module",
-    "keywords": [
-        "subdivision",
-        "buffergeometry",
-        "modifier"
-    ],
-    "homepage": "https://github.com/stevinz/three-subdivide",
-    "repository": {
-      "type": "git",
-      "url": "https://github.com/stevinz/three-subdivide.git"
-    },
-    "author": "Stephens Nunnally <@stevinz>",
-    "license": "MIT",
-    "private": false,
-    "engines": {
-      "node": ">=6.0.0"
-    },
-    "engineStrict": true,
-
-    "peerDependencies": {
-        "three": ">= 0.123.0"
-    }
+  "name": "three-subdivide",
+  "version": "1.0.0",
+  "description": "Smooth subdivision surface modifier for use with three.js BufferGeometry.",  
+  "module": "src/index.js",
+  "main": "build/index.umd.cjs",
+  "type": "module",
+  "scripts": {
+    "build": "rollup -c",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "src/*",
+    "build/*"
+  ],
+  "keywords": [
+    "subdivision",
+    "subdivide",
+    "mesh",
+    "surface",
+    "buffergeometry",
+    "geometry",
+    "modifier",
+    "graphics",
+    "threejs",
+    "three-js",
+    "loop",
+    "smooth"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stevinz/three-subdivide.git"
+  },
+  "author": "Stephens Nunnally <stephens@scidian.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/stevinz/three-subdivide/issues"
+  },
+  "homepage": "https://github.com/stevinz/three-subdivide",
+  "peerDependencies": {
+    "three": ">= 0.125.0"
+  },
+  "devDependencies": {
+    "rollup": "^2.58.0",
+    "three": "^0.125.0"
+  },
+  "private": false
 }
