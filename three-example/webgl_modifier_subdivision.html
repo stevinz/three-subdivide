@@ -166,9 +166,11 @@
 
 						const points = [];
 						for ( let i = 0; i < 65; i += 5 ) {
+
 							let x = ( Math.sin( i * 0.2 ) * Math.sin( i * 0.1 ) * 15 + 50 ) * 1.2;
 							let y = ( i - 5 ) * 3;
 							points.push( new THREE.Vector2( x * 0.0075, y * 0.005 ) );
+
 						}
 
 						const latheGeometry = new THREE.LatheGeometry( points, 4 );
