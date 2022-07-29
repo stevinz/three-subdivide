@@ -13,7 +13,7 @@
 			See external <a href="https://github.com/stevinz/three-subdivide" target="_blank" rel="noopener">three-subdivide</a> for more information on subdivision surfaces.
 		</div>
 
-		<!-- //////////////////////////////////////////////////////////////////////////// -->
+		<!-- !!!!! THREE DEMO DIFF STARTS HERE !!!!! -->
 
 		<a href="https://github.com/stevinz/three-subdivide" class="github-corner" aria-label="View source on GitHub">
 			<svg width="80" height="80" viewBox="0 0 250 250" style="fill:#08f; color:#222; position: absolute; top: 0; border: 0; left: 0; transform: scale(-1, 1);" aria-hidden="true">
@@ -30,9 +30,9 @@
  		<script type='importmap'>
 	 		{
 		 		"imports": {
-			 		"three":                "https://unpkg.com/three@0.143.0/build/three.module.js",
-					"three/examples/":		"https://unpkg.com/three@0.143.0/examples/",
-					"three-subdivide": 		"https://unpkg.com/three-subdivide/build/index.module.js"
+			 		"three": "https://unpkg.com/three@0.143.0/build/three.module.js",
+					"three/examples/": "https://unpkg.com/three@0.143.0/examples/",
+					"three-subdivide": "https://unpkg.com/three-subdivide@^1.0.2/build/index.module.js"
 		 		}
 	 		}
  		</script>
@@ -40,11 +40,16 @@
 		<script type="module">
 
 			import * as THREE from 'three';
-			import { LoopSubdivision } from 'three-subdivide';
-			import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
 			import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
 
-		/////////////////////////////////////////////////////////////////////////////////////
+			import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+			import { TeapotGeometry } from 'three/examples/jsm/geometries/TeapotGeometry.js';
+			import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+
+			import { LoopSubdivision } from 'three-subdivide';
+
+		/* !!!!! THREE DEMO DIFF ENDS HERE  !!!!! */
 
 			let renderer, scene, camera;
 			let texture;
@@ -58,7 +63,7 @@
 				uvSmooth: false,
 				flatOnly: false,
 				maxTriangles: 25000,
-				wireframe: false,
+				wireframe: false
 			};
 
 			init();
@@ -168,7 +173,7 @@
 						return new THREE.CircleGeometry( 0.6, 10 );
 
 					case 'cone':
-						return new THREE.ConeGeometry( 0.6, 1.5, 5, 5 );
+						return new THREE.ConeGeometry( 0.6, 1.5, 5, 3 );
 
 					case 'cylinder':
 						return new THREE.CylinderGeometry( 0.5, 0.5, 1, 5, 5 );
@@ -225,10 +230,9 @@
 
 			function updateMeshes() {
 
-				meshNormal.geometry = getGeometry();
-
-				meshSmooth.geometry = LoopSubdivision.modify(
-					getGeometry(),
+				const normalGeometry = getGeometry();
+				const smoothGeometry = LoopSubdivision.modify(
+					normalGeometry,
 					params.iterations,
 					params.split,
 					params.uvSmooth,
@@ -236,8 +240,15 @@
 					params.maxTriangles
 				);
 
-				wireNormal.geometry = meshNormal.geometry.clone();
-				wireSmooth.geometry = meshSmooth.geometry.clone();
+				meshNormal.geometry.dispose();
+				meshSmooth.geometry.dispose();
+				meshNormal.geometry = normalGeometry;
+				meshSmooth.geometry = smoothGeometry;
+
+				wireNormal.geometry.dispose();
+				wireSmooth.geometry.dispose();
+				wireNormal.geometry = normalGeometry.clone();
+				wireSmooth.geometry = smoothGeometry.clone();
 
 				wireNormal.visible = wireSmooth.visible = params.wireframe;
 

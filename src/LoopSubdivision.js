@@ -70,7 +70,6 @@ const _center = new THREE.Vector3();
 const _midpoint = new THREE.Vector3();
 const _normal = new THREE.Vector3();
 const _temp = new THREE.Vector3();
-const _vector = new THREE.Vector3();
 const _vector0 = new THREE.Vector3(); // .Vector4();
 const _vector1 = new THREE.Vector3(); // .Vector4();
 const _vector2 = new THREE.Vector3(); // .Vector4();
@@ -113,28 +112,33 @@ class LoopSubdivision {
     */
     static modify(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity) {
 
-        // Check for 'position' Attribute
-        if (bufferGeometry.attributes.position === undefined) {
-            console.warn(`LoopSubdivision.modify(): Geometry missing required attribute, 'position'`);
-            return bufferGeometry;
+        ///// Geometries
+        if (! verifyGeometry(bufferGeometry)) return bufferGeometry;
+        let modifiedGeometry = bufferGeometry.clone();
+
+        ///// Presplit
+        if (split) {
+            const splitGeometry = LoopSubdivision.edgeSplit(modifiedGeometry)
+            modifiedGeometry.dispose();
+            modifiedGeometry = splitGeometry;
         }
 
-        // Presplit
-        if (split) bufferGeometry = LoopSubdivision.edgeSplit(bufferGeometry);
-
-        // Apply Subdivision
+        ///// Apply Subdivision
         for (let i = 0; i < iterations; i++) {
-            let currentTriangles = bufferGeometry.attributes.position.count / 3;
+            let currentTriangles = modifiedGeometry.attributes.position.count / 3;
             if (currentTriangles < maxTriangles) {
+                let subdividedGeometry;
                 if (flatOnly) {
-                    bufferGeometry = LoopSubdivision.flat(bufferGeometry);
+                    subdividedGeometry = LoopSubdivision.flat(modifiedGeometry);
                 } else {
-                    bufferGeometry = LoopSubdivision.smooth(bufferGeometry, uvSmooth);
+                    subdividedGeometry = LoopSubdivision.smooth(modifiedGeometry, uvSmooth);
                 }
+                modifiedGeometry.dispose();
+                modifiedGeometry = subdividedGeometry;
             }
         }
 
-        return bufferGeometry;
+        return modifiedGeometry;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -218,7 +222,7 @@ class LoopSubdivision {
         attributeList.forEach((attributeName) => {
             const attribute = existing.getAttribute(attributeName);
             if (! attribute) return;
-            const newTriangles = 4; // <-- need to calculate better?
+            const newTriangles = 4; /* maximum number of new triangles */
             const arrayLength = (vertexCount * attribute.itemSize) * newTriangles;
             const floatArray = new Float32Array(arrayLength);
 
@@ -312,7 +316,15 @@ class LoopSubdivision {
                 }
             }
 
-            split.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, attribute.itemSize));
+            // Resize Array
+            const reducedCount = (index * 3) / step;
+            const reducedArray = new Float32Array(reducedCount);
+            for (let i = 0; i < reducedCount; i++) {
+                reducedArray[i] = floatArray[i];
+            }
+
+            // Set Attribute
+            split.setAttribute(attributeName, new THREE.BufferAttribute(reducedArray, attribute.itemSize));
         });
 
         // Clean Up, Return New Geometry
@@ -393,7 +405,6 @@ class LoopSubdivision {
         const norAttribute = existing.getAttribute('normal');
         const hashToIndex = {};         // Map by hash that contains arrays of index values of same position
         const indexToHash = [];         // Position_Normal hash stored for each index
-        const indexToPos = [];          // Position only hash stored for each index
         const existingNeighbors = {};   // Position hash mapped to Sets of existing vertex neighbors
         const flatOpposites = {};       // Position hash mapped to Sets of new edge point opposites
 
@@ -404,22 +415,30 @@ class LoopSubdivision {
             _vertex[2].fromBufferAttribute(posAttribute, i + 2);
 
             // Map Vertex Hashes
-            for (let j = 0; j < 3; j++) {
-                const positionHash = hashFromVector(_vertex[j]);
-                const normalHash = hashFromVector(_vector.fromBufferAttribute(norAttribute, i + j));
+            const positionHashes = [];  // Position only hash
+            for (let v = 0; v < 3; v++) {
+                // Position
+                const positionHash = hashFromVector(_vertex[v]);
+                positionHashes.push(positionHash);
+
+                // Normal
+                _normal.fromBufferAttribute(norAttribute, i + v);
+                // calcNormal(_normal, _vertex[0], _vertex[1], _vertex[2]);
+                const normalHash = hashFromVector(_normal);
+
+                // Combined
                 const pointHash = `${positionHash}_${normalHash}`;
-                addToMapArray(hashToIndex, pointHash, (i + j));
-                indexToPos.push(positionHash);
+                addToMapArray(hashToIndex, pointHash, (i + v));
                 indexToHash.push(pointHash);
             }
 
             // Neighbors (Existing Geometry)
-            addToObjectSet(existingNeighbors, indexToPos[i + 0], indexToHash[i + 1]);
-            addToObjectSet(existingNeighbors, indexToPos[i + 0], indexToHash[i + 2]);
-            addToObjectSet(existingNeighbors, indexToPos[i + 1], indexToHash[i + 0]);
-            addToObjectSet(existingNeighbors, indexToPos[i + 1], indexToHash[i + 2]);
-            addToObjectSet(existingNeighbors, indexToPos[i + 2], indexToHash[i + 0]);
-            addToObjectSet(existingNeighbors, indexToPos[i + 2], indexToHash[i + 1]);
+            addToObjectSet(existingNeighbors, positionHashes[0], indexToHash[i + 1]);
+            addToObjectSet(existingNeighbors, positionHashes[0], indexToHash[i + 2]);
+            addToObjectSet(existingNeighbors, positionHashes[1], indexToHash[i + 0]);
+            addToObjectSet(existingNeighbors, positionHashes[1], indexToHash[i + 2]);
+            addToObjectSet(existingNeighbors, positionHashes[2], indexToHash[i + 0]);
+            addToObjectSet(existingNeighbors, positionHashes[2], indexToHash[i + 1]);
 
             // Midpoints / Opposites
             _vec0to1.copy(_vertex[0]).add(_vertex[1]).divideScalar(2.0);
@@ -625,17 +644,15 @@ export { LoopSubdivision };
 /////   Reference
 /////////////////////////////////////////////////////////////////////////////////////
 //
+// Subdivision Surfaces
 //      https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/thesis-10.pdf
 //      https://en.wikipedia.org/wiki/Loop_subdivision_surface
 //      https://cseweb.ucsd.edu/~alchern/teaching/cse167_fa21/6-3Surfaces.pdf
 //
-/////////////////////////////////////////////////////////////////////////////////////
-/////   Original three.js SubdivisionModifier
-/////////////////////////////////////////////////////////////////////////////////////
-//
-// Loop, r124
+// Original three.js SubdivisionModifier, r124 (Loop)
 //      https://github.com/mrdoob/three.js/blob/r124/examples/jsm/modifiers/SubdivisionModifier.js
-// Catmull-Clark, r59
+//
+// Original three.js SubdivisionModifier, r59 (Catmull-Clark)
 //      https://github.com/mrdoob/three.js/blob/r59/examples/js/modifiers/SubdivisionModifier.js
 //
 /////////////////////////////////////////////////////////////////////////////////////
@@ -644,8 +661,7 @@ export { LoopSubdivision };
 //
 // MIT License
 //
-// Subdivide Modifier
-//      Copyright (c) 2022 Stephens Nunnally <@stevinz>
+// Copyright (c) 2022 Stephens Nunnally <@stevinz>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
