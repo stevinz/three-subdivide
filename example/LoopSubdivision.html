@@ -47,14 +47,18 @@
 			import { TeapotGeometry } from 'three/examples/jsm/geometries/TeapotGeometry.js';
 			import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 
-			import { LoopSubdivision } from 'three-subdivide';
+			// !!!!! TEMP
+			// import { LoopSubdivision } from 'three-subdivide';
+			import { LoopSubdivision } from '../src/LoopSubdivision.js';
+			// !!!!!
 
 		/* !!!!! THREE DEMO DIFF ENDS HERE  !!!!! */
 
 			let renderer, scene, camera;
 			let texture;
-			let meshMaterial, meshNormal, meshSmooth;
-			let wireMaterial, wireNormal, wireSmooth;
+			let basicMaterial, standardMaterial, wireMaterial;
+			let meshNormal, meshSmooth;
+			let wireNormal, wireSmooth;
 
 			const params = {
 				geometry: 'Box',
@@ -63,6 +67,7 @@
 				uvSmooth: false,
 				flatOnly: false,
 				maxTriangles: 25000,
+				lighting: true,
 				wireframe: false
 			};
 
@@ -87,6 +92,15 @@
 				controls.target.set( 0, 0, 0 );
 				controls.update();
 
+				scene.add( new THREE.AmbientLight( 0xffffff, 0.25 ) );
+				scene.add( new THREE.HemisphereLight( 0xffffff, 0x444444, 0.75 ) );
+
+				const frontLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+				const backLight = new THREE.DirectionalLight( 0xffffff, 0.5 );
+				frontLight.position.set( 0, 1, 1 );
+				backLight.position.set( 0, 1, - 1 );
+				scene.add( frontLight, backLight );
+
 				texture = new THREE.TextureLoader().load( './textures/uv_grid_opengl.jpg', () => {
 
 					texture.wrapS = THREE.RepeatWrapping;
@@ -96,20 +110,24 @@
 
 				} );
 
-				meshMaterial = new THREE.MeshBasicMaterial( {
+				const materialParams = {
 					map: texture,
 					polygonOffset: true,
 					polygonOffsetFactor: 1, // positive value pushes polygon further away
 					polygonOffsetUnits: 1,
 					side: THREE.DoubleSide
-				} );
-				meshNormal = new THREE.Mesh( new THREE.BufferGeometry(), meshMaterial );
-				meshSmooth = new THREE.Mesh( new THREE.BufferGeometry(), meshMaterial );
+				};
+
+				basicMaterial = new THREE.MeshBasicMaterial( materialParams );
+				standardMaterial = new THREE.MeshStandardMaterial( materialParams );
+				wireMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, depthTest: true, wireframe: true } );
+
+				meshNormal = new THREE.Mesh( new THREE.BufferGeometry(), standardMaterial );
+				meshSmooth = new THREE.Mesh( new THREE.BufferGeometry(), standardMaterial );
 				meshNormal.position.set( - 0.7, 0, 0 );
 				meshSmooth.position.set( 0.7, 0, 0 );
 				scene.add( meshNormal, meshSmooth );
 
-				wireMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, depthTest: true, wireframe: true } );
 				wireNormal = new THREE.Mesh( new THREE.BufferGeometry(), wireMaterial );
 				wireSmooth = new THREE.Mesh( new THREE.BufferGeometry(), wireMaterial );
 				wireNormal.visible = false;
@@ -122,7 +140,7 @@
 
 				window.addEventListener( 'resize', onWindowResize );
 
-				const geomTypes = [ 'Box', 'Capsule', 'Circle', 'Cone', 'Cylinder', 'Dodecahedron', 'Icosahedron', 'Lathe', 'Octahedron', 'Plane', 'Ring', 'Sphere', 'Tetrahedron', 'Torus', 'TorusKnot' ];
+				const geomTypes = [ 'Box', 'Capsule', 'Circle', 'Cone', 'Cylinder', 'Dodecahedron', 'Icosahedron', 'Lathe', 'Octahedron', 'Plane', 'Ring', 'Shape', 'Sphere', 'Teapot', 'Tetrahedron', 'Torus', 'TorusKnot' ];
 
 				const gui = new GUI();
 
@@ -131,8 +149,8 @@
 
 					const geom = params.geometry.toLowerCase();
 
-					params.split = geom === 'box' || geom === 'ring';
-					params.uvSmooth = geom === 'circle' || geom === 'plane' || geom === 'ring';
+					params.split = geom === 'box' || geom === 'ring' || geom === 'plane';
+					params.uvSmooth = geom === 'circle' || geom === 'plane' || geom === 'ring' || geom === 'shape';
 
 					refreshDisplay();
 
@@ -145,7 +163,8 @@
 				folder1.add( params, 'maxTriangles' ).onFinishChange( updateMeshes );
 
 				const folder2 = gui.addFolder( 'View' );
-				folder2.add( params, 'wireframe' ).onFinishChange( updateMeshes );
+				folder2.add( params, 'lighting' ).onFinishChange( updateView );
+				folder2.add( params, 'wireframe' ).onFinishChange( updateView );
 
 				function refreshDisplay() {
 
@@ -212,8 +231,38 @@
 					case 'ring':
 						return new THREE.RingGeometry( 0.3, 0.6, 10 );
 
+					case 'shape':
+
+						// Fish
+
+						const fishShape = new THREE.Shape()
+							.quadraticCurveTo( 0.375, - 0.6, 0.675, - 0.075 )
+							.quadraticCurveTo( 0.75, - 0.075, 0.8625, - 0.3 )
+							.quadraticCurveTo( 0.8625, 0, 0.8625, 0.3 )
+							.quadraticCurveTo( 0.75, 0.075, 0.675, 0.075 )
+							.quadraticCurveTo( 0.375, 0.6, 0, 0 );
+
+						const options = {
+							curveSegments: 8,
+							steps: 1,
+							depth: 0.25,
+							bevelSegments: 2
+						};
+
+						const shapeGeometry = new THREE.ExtrudeGeometry( fishShape, options );
+						shapeGeometry.center();
+
+						return shapeGeometry;
+
 					case 'sphere':
 						return new THREE.SphereGeometry( 0.6, 8, 4 );
+
+					case 'teapot':
+
+						const teapotGeometry = new TeapotGeometry( 0.4, 3 );
+						teapotGeometry.rotateY( - 0.5 );
+
+						return teapotGeometry;
 
 					case 'tetrahedron':
 						return new THREE.TetrahedronGeometry( 0.8 );
@@ -231,6 +280,7 @@
 			function updateMeshes() {
 
 				const normalGeometry = getGeometry();
+
 				const smoothGeometry = LoopSubdivision.modify(
 					normalGeometry,
 					params.iterations,
@@ -249,6 +299,14 @@
 				wireSmooth.geometry.dispose();
 				wireNormal.geometry = normalGeometry.clone();
 				wireSmooth.geometry = smoothGeometry.clone();
+
+				render();
+
+			}
+
+			function updateView() {
+
+				meshNormal.material = meshSmooth.material = ( params.lighting ) ? standardMaterial : basicMaterial;
 
 				wireNormal.visible = wireSmooth.visible = params.wireframe;
 

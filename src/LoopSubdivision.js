@@ -204,7 +204,8 @@ class LoopSubdivision {
             let index = i / 3;
             for (let j = 0; j < hashes.length; j++) {
                 // Attach Triangle Index to Edge Hash
-                addToMapArray(edgeHashToTriangle, hashes[j], index);;
+                if (! edgeHashToTriangle[hashes[j]]) edgeHashToTriangle[hashes[j]] = [];
+                edgeHashToTriangle[hashes[j]].push(index);
 
                 // Edge Length
                 if (! edgeLength[hashes[j]]) {
@@ -402,54 +403,44 @@ class LoopSubdivision {
         const attributeList = gatherAttributes(existing);
         const vertexCount = existing.attributes.position.count;
         const posAttribute = existing.getAttribute('position');
-        const norAttribute = existing.getAttribute('normal');
-        const hashToIndex = {};         // Map by hash that contains arrays of index values of same position
-        const indexToHash = [];         // Position_Normal hash stored for each index
-        const existingNeighbors = {};   // Position hash mapped to Sets of existing vertex neighbors
-        const flatOpposites = {};       // Position hash mapped to Sets of new edge point opposites
+        const existingNeighbors = {};       // Position hash mapped to existing vertex neighbors
+        const flatOpposites = {};           // Position hash mapped to new edge point opposites
+
+        function addNeighbor(posHash, neighborHash, index) {
+            if (! existingNeighbors[posHash]) existingNeighbors[posHash] = {};
+            if (! existingNeighbors[posHash][neighborHash]) existingNeighbors[posHash][neighborHash] = [];
+            existingNeighbors[posHash][neighborHash].push(index);
+        }
+
+        function addOpposite(posHash, index) {
+            if (! flatOpposites[posHash]) flatOpposites[posHash] = [];
+            flatOpposites[posHash].push(index);
+        }
 
         ///// Existing Vertex Hashes
         for (let i = 0; i < vertexCount; i += 3) {
-            _vertex[0].fromBufferAttribute(posAttribute, i + 0);
-            _vertex[1].fromBufferAttribute(posAttribute, i + 1);
-            _vertex[2].fromBufferAttribute(posAttribute, i + 2);
+            const posHash0 = hashFromVector(_vertex[0].fromBufferAttribute(posAttribute, i + 0));
+            const posHash1 = hashFromVector(_vertex[1].fromBufferAttribute(posAttribute, i + 1));
+            const posHash2 = hashFromVector(_vertex[2].fromBufferAttribute(posAttribute, i + 2));
 
-            // Map Vertex Hashes
-            const positionHashes = [];  // Position only hash
-            for (let v = 0; v < 3; v++) {
-                // Position
-                const positionHash = hashFromVector(_vertex[v]);
-                positionHashes.push(positionHash);
+            // Neighbors (of Existing Geometry)
+            addNeighbor(posHash0, posHash1, i + 1);
+            addNeighbor(posHash0, posHash2, i + 2);
+            addNeighbor(posHash1, posHash0, i + 0);
+            addNeighbor(posHash1, posHash2, i + 2);
+            addNeighbor(posHash2, posHash0, i + 0);
+            addNeighbor(posHash2, posHash1, i + 1);
 
-                // Normal
-                _normal.fromBufferAttribute(norAttribute, i + v);
-                // calcNormal(_normal, _vertex[0], _vertex[1], _vertex[2]);
-                const normalHash = hashFromVector(_normal);
-
-                // Combined
-                const pointHash = `${positionHash}_${normalHash}`;
-                addToMapArray(hashToIndex, pointHash, (i + v));
-                indexToHash.push(pointHash);
-            }
-
-            // Neighbors (Existing Geometry)
-            addToObjectSet(existingNeighbors, positionHashes[0], indexToHash[i + 1]);
-            addToObjectSet(existingNeighbors, positionHashes[0], indexToHash[i + 2]);
-            addToObjectSet(existingNeighbors, positionHashes[1], indexToHash[i + 0]);
-            addToObjectSet(existingNeighbors, positionHashes[1], indexToHash[i + 2]);
-            addToObjectSet(existingNeighbors, positionHashes[2], indexToHash[i + 0]);
-            addToObjectSet(existingNeighbors, positionHashes[2], indexToHash[i + 1]);
-
-            // Midpoints / Opposites
+            // Opposites (of new FlatSubdivided vertices)
             _vec0to1.copy(_vertex[0]).add(_vertex[1]).divideScalar(2.0);
             _vec1to2.copy(_vertex[1]).add(_vertex[2]).divideScalar(2.0);
             _vec2to0.copy(_vertex[2]).add(_vertex[0]).divideScalar(2.0);
             const hash0to1 = hashFromVector(_vec0to1);
             const hash1to2 = hashFromVector(_vec1to2);
             const hash2to0 = hashFromVector(_vec2to0);
-            addToObjectSet(flatOpposites, hash0to1, indexToHash[i + 2]);
-            addToObjectSet(flatOpposites, hash1to2, indexToHash[i + 0]);
-            addToObjectSet(flatOpposites, hash2to0, indexToHash[i + 1]);
+            addOpposite(hash0to1, i + 2);
+            addOpposite(hash1to2, i + 0);
+            addOpposite(hash2to0, i + 1);
         }
 
         ///// Build Geometry
@@ -466,22 +457,24 @@ class LoopSubdivision {
             for (let i = 0; i < flat.attributes.position.count; i += 3) {
 
                 if (attributeName === 'uv' && ! uvSmooth) {
+
                     for (let v = 0; v < 3; v++) {
                         _vertex[v].fromBufferAttribute(flatAttribute, i + v);
                     }
 
                 } else { // 'normal', 'position', 'color', etc...
+
                     for (let v = 0; v < 3; v++) {
                         _vertex[v].fromBufferAttribute(flatAttribute, i + v);
                         _position[v].fromBufferAttribute(flatPosition, i + v);
 
                         let positionHash = hashFromVector(_position[v]);
                         let neighbors = existingNeighbors[positionHash];
-                        let opposites = flatOpposites[positionHash]
+                        let opposites = flatOpposites[positionHash];
 
                         ///// Adjust Source Vertex
-                        if (neighbors && (neighbors instanceof Set)) {
-                            const k = neighbors.size;
+                        if (neighbors) {//} && neighbors instanceof Set) {
+                            const k = Object.keys(neighbors).length;
 
                             ///// Loop's Formula
                             const beta = 1 / k * ((5/8) - Math.pow((3/8) + (1/4) * Math.cos(2 * Math.PI / k), 2));
@@ -496,24 +489,33 @@ class LoopSubdivision {
                             const startWeight = 1.0 - (beta * k);
                             _vertex[v].multiplyScalar(startWeight);
 
-                            neighbors.forEach(neighborHash => {
-                                _average.fromBufferAttribute(existingAttribute, hashToIndex[neighborHash][0]);
+                            for (let neighborHash in neighbors) {
+                                const neighborIndices = neighbors[neighborHash];
+
+                                _average.set(0, 0, 0);
+                                for (let j = 0; j < neighborIndices.length; j++) {
+                                    _average.add(_temp.fromBufferAttribute(existingAttribute, neighborIndices[j]));
+                                }
+                                _average.divideScalar(neighborIndices.length);
+
                                 _average.multiplyScalar(beta);
                                 _vertex[v].add(_average);
-                            });
+                            }
 
                         ///// Newly Added Edge Vertex
-                        } else if (opposites && (opposites instanceof Set) && opposites.size === 2) {
-                            const k = opposites.size;
+                        } else if (opposites && opposites.length === 2) {
+
+                            const k = opposites.length;
                             const beta = 0.125; /* 1/8 */
                             const startWeight = 1.0 - (beta * k);
                             _vertex[v].multiplyScalar(startWeight);
 
-                            opposites.forEach(oppositeHash => {
-                                _average.fromBufferAttribute(existingAttribute, hashToIndex[oppositeHash][0]);
+                            opposites.forEach(oppositeIndex => {
+                                _average.fromBufferAttribute(existingAttribute, oppositeIndex);
                                 _average.multiplyScalar(beta);
                                 _vertex[v].add(_average);
                             });
+
                         }
                     }
                 }
@@ -559,22 +561,6 @@ function hashFromVector(vector, shift = _positionShift) {
 
 function round(x) {
     return (x + ((x > 0) ? 0.5 : -0.5)) << 0;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////
-/////   Local Functions, Maps
-/////////////////////////////////////////////////////////////////////////////////////
-
-/** Adds a value into set array */
-function addToObjectSet(object, hash, value) {
-    if (! object[hash]) object[hash] = new Set();
-    object[hash].add(value);
-}
-
-/** Adds value into map array */
-function addToMapArray(map, key, value) {
-    if (! map[key]) map[key] = [];
-    map[key].push(value);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
