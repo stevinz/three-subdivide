@@ -200,9 +200,11 @@
             attributeList.forEach((attributeName) => {
                 const attribute = existing.getAttribute(attributeName);
                 if (! attribute) return;
+                const attributeArrayType = attribute.array.constructor;
+
                 const newTriangles = 4; /* maximum number of new triangles */
                 const arrayLength = (vertexCount * attribute.itemSize) * newTriangles;
-                const floatArray = new Float32Array(arrayLength);
+                const floatArray = new attributeArrayType(arrayLength);
 
                 let index = 0;
                 let step = attribute.itemSize;
@@ -296,7 +298,7 @@
 
                 // Resize Array
                 const reducedCount = (index * 3) / step;
-                const reducedArray = new Float32Array(reducedCount);
+                const reducedArray = new attributeArrayType(reducedCount);
                 for (let i = 0; i < reducedCount; i++) {
                     reducedArray[i] = floatArray[i];
                 }
@@ -330,9 +332,11 @@
             attributeList.forEach((attributeName) => {
                 const attribute = existing.getAttribute(attributeName);
                 if (! attribute) return;
+
+                const attributeArrayType = attribute.array.constructor;
                 const newTriangles = 4;
                 const arrayLength = (vertexCount * attribute.itemSize) * newTriangles;
-                const floatArray = new Float32Array(arrayLength);
+                const floatArray = new attributeArrayType(arrayLength);
 
                 let index = 0;
                 let step = attribute.itemSize;
@@ -423,12 +427,13 @@
             ///// Build Geometry
             attributeList.forEach((attributeName) => {
                 const existingAttribute = existing.getAttribute(attributeName);
+                const existingArrayType = existingAttribute.array.constructor;
                 const flatAttribute = flat.getAttribute(attributeName);
                 const flatPosition = flat.getAttribute('position');
                 if (existingAttribute === undefined || flatAttribute === undefined) return;
 
                 const arrayLength = (flat.attributes.position.count * flatAttribute.itemSize);
-                const floatArray = new Float32Array(arrayLength);
+                const floatArray = new existingArrayType(arrayLength);
 
                 let index = 0;
                 for (let i = 0; i < flat.attributes.position.count; i += 3) {
