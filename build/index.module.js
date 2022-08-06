@@ -360,6 +360,8 @@ class LoopSubdivision {
         const attributeList = gatherAttributes(existing);
         const vertexCount = existing.attributes.position.count;
         const posAttribute = existing.getAttribute('position');
+        const flatPosition = flat.getAttribute('position');
+        const hashToIndex = {};             // Position hash mapped to index values of same position
         const existingNeighbors = {};       // Position hash mapped to existing vertex neighbors
         const flatOpposites = {};           // Position hash mapped to new edge point opposites
 
@@ -398,6 +400,13 @@ class LoopSubdivision {
             addOpposite(hash0to1, i + 2);
             addOpposite(hash1to2, i + 0);
             addOpposite(hash2to0, i + 1);
+        }
+
+        ///// Flat Position to Index Map
+        for (let i = 0; i < flat.attributes.position.count; i++) {
+            const posHash = hashFromVector(_vertex[0].fromBufferAttribute(flatPosition, i));
+            if (! hashToIndex[posHash]) hashToIndex[posHash] = [];
+            hashToIndex[posHash].push(i);
         }
 
         ///// Build Geometry
@@ -473,9 +482,36 @@ class LoopSubdivision {
                                 _average.multiplyScalar(beta);
                                 _vertex[v].add(_average);
                             });
-
                         }
                     }
+                }
+
+                // Add New Triangle Position
+                setTriangle(floatArray, index, flatAttribute.itemSize, _vertex[0], _vertex[1], _vertex[2]);
+                index += (flatAttribute.itemSize * 3);
+            }
+
+            // Smooth 'normal's
+            if (attributeName === 'normal') {
+                index = 0;
+                for (let i = 0; i < flat.attributes.position.count; i += 3) {
+                    for (let v = 0; v < 3; v++) {
+                        _position[v].fromBufferAttribute(flatPosition, i + v);
+                        let positionHash = hashFromVector(_position[v]);
+                        let positions = hashToIndex[positionHash];
+
+                        // Average all position normals
+                        _vertex[v].set(0, 0, 0);
+                        positions.forEach(positionIndex => {
+                            _average.fromBufferAttribute(flatAttribute, positionIndex);
+                            _vertex[v].add(_average);
+                        });
+                        _vertex[v].divideScalar(Object.keys(positions).length);
+                    }
+
+                    // Set Triangle
+                    setTriangle(floatArray, index, flatAttribute.itemSize, _vertex[0], _vertex[1], _vertex[2]);
+                    index += (flatAttribute.itemSize * 3);
                 }
 
                 // Add New Triangle Position
