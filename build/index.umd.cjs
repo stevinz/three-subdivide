@@ -515,7 +515,7 @@
                     index += (flatAttribute.itemSize * 3);
                 }
 
-                // Smooth 'normal's
+                ///// Smooth 'normal's
                 if (attributeName === 'normal') {
                     index = 0;
                     for (let i = 0; i < flat.attributes.position.count; i += 3) {
@@ -524,13 +524,18 @@
                             let positionHash = hashFromVector(_position[v]);
                             let positions = hashToIndex[positionHash];
 
-                            // Average all position normals
-                            _vertex[v].set(0, 0, 0);
+                            const k = Object.keys(positions).length;
+                            const beta = 0.625 / k; /* 5/8 */
+                            const startWeight = 1.0 - (beta * k);
+
+                            _vertex[v].fromBufferAttribute(flatAttribute, i + v);
+                            _vertex[v].multiplyScalar(startWeight);
+
                             positions.forEach(positionIndex => {
                                 _average.fromBufferAttribute(flatAttribute, positionIndex);
+                                _average.multiplyScalar(beta);
                                 _vertex[v].add(_average);
                             });
-                            _vertex[v].divideScalar(Object.keys(positions).length);
                         }
 
                         // Set Triangle
@@ -543,6 +548,7 @@
                     index += (flatAttribute.itemSize * 3);
                 }
 
+                ///// Set Attribute
                 loop.setAttribute(attributeName, new THREE__namespace.BufferAttribute(floatArray, flatAttribute.itemSize));
             });
 
