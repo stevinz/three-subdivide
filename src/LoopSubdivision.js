@@ -21,15 +21,16 @@
 //      modern three.js BufferGeometry.
 //
 //      At one point, three.js included a subdivision surface modifier in the extended examples (see bottom
-//      of file for links), it was removed in r125. This modifier was originally based on the Catmull-Clark
+//      of file for links), it was removed in r125. The modifier was originally based on the Catmull-Clark
 //      algorithm, which works best for geometry with convex coplanar n-gon faces. In three.js r60 the modifier
-//      was changed to use the Loop algorithm, which was designed to work better with triangle based meshes.
+//      was changed to utilize the Loop algorithm. The Loop algorithm was designed to work better with triangle
+//      based meshes.
 //
-//      The Loop algorithm, however, doesn't always provide uniform results as the vertices are skewed toward
-//      the most used vertex positions. A triangle based box (e.g. BoxGeometry) will favor the corners. To
-//      alleviate this issue, this implementation includes an initial pass to split coplanar faces at their
-//      shared edges. It starts by splitting along the longest shared edge first, and then from that midpoint it
-//      splits to any remaining coplanar shared edges. This can be disabled by passing 'split' as false.
+//      The Loop algorithm, however, doesn't always provide uniform results as the vertices are
+//      skewed toward the most used vertex positions. A triangle based box (e.g. BoxGeometry for example) will
+//      tend to favor the corners. To alleviate this issue, this implementation includes an initial pass to split
+//      coplanar faces at their shared edges. It starts by splitting along the longest shared edge first, and then
+//      from that midpoint it splits to any remaining coplanar shared edges.
 //
 //      Also by default, this implementation inserts new uv coordinates, but does not average them using the Loop
 //      algorithm. In some cases (often in flat geometries) this will produce undesired results, a
@@ -70,22 +71,26 @@ const _center = new THREE.Vector3();
 const _midpoint = new THREE.Vector3();
 const _normal = new THREE.Vector3();
 const _temp = new THREE.Vector3();
+
 const _vector0 = new THREE.Vector3(); // .Vector4();
 const _vector1 = new THREE.Vector3(); // .Vector4();
 const _vector2 = new THREE.Vector3(); // .Vector4();
 const _vec0to1 = new THREE.Vector3();
 const _vec1to2 = new THREE.Vector3();
 const _vec2to0 = new THREE.Vector3();
+
 const _position = [
     new THREE.Vector3(),
     new THREE.Vector3(),
     new THREE.Vector3(),
 ];
+
 const _vertex = [
     new THREE.Vector3(),
     new THREE.Vector3(),
     new THREE.Vector3(),
 ];
+
 const _triangle = new THREE.Triangle();
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -104,20 +109,33 @@ class LoopSubdivision {
      *
      * @param {Object} bufferGeometry - Three.js geometry to be subdivided
      * @param {Number} iterations - How many times to run subdividion
-     * @param {Boolean} split - Should coplanar faces be divided along shared edges before running Loop subdivision
-     * @param {Boolean} uvSmooth - Should UV values be averaged during subdivision
-     * @param {Boolean} flatOnly - If true, subdivision generates triangles, but does not modify positions
-     * @param {Number} maxTriangles - If geometry contains more than this many triangles, subdivision will not contiunue
+     * @param {Object} params - Optional parameters object, see below
      * @returns {Object} Returns new, subdivided, three.js BufferGeometry object
+     *
+     * Optional Parameters Object
+     * @param {Boolean} split - Should coplanar faces be divided along shared edges before running Loop subdivision?
+     * @param {Boolean} uvSmooth - Should UV values be averaged during subdivision?
+     * @param {Boolean} preserveEdges - Should edges / breaks in geometry be ignored during subdivision?
+     * @param {Boolean} flatOnly - If true, subdivision generates triangles, but does not modify positions
+     * @param {Number} maxTriangles - If geometry contains more than this many triangles, subdivision will not continue
     */
-    static modify(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity) {
+    static modify(bufferGeometry, iterations = 1, params = {}) {
+
+        if (typeof params !== 'object') params = {};
+
+        ///// Parameters
+        if (params.split === undefined) params.split = true;
+        if (params.uvSmooth === undefined) params.uvSmooth = false;
+        if (params.preserveEdges === undefined) params.preserveEdges = false;
+        if (params.flatOnly === undefined) params.flatOnly = false;
+        if (params.maxTriangles === undefined) params.maxTriangles = Infinity;
 
         ///// Geometries
         if (! verifyGeometry(bufferGeometry)) return bufferGeometry;
         let modifiedGeometry = bufferGeometry.clone();
 
         ///// Presplit
-        if (split) {
+        if (params.split) {
             const splitGeometry = LoopSubdivision.edgeSplit(modifiedGeometry)
             modifiedGeometry.dispose();
             modifiedGeometry = splitGeometry;
@@ -126,12 +144,12 @@ class LoopSubdivision {
         ///// Apply Subdivision
         for (let i = 0; i < iterations; i++) {
             let currentTriangles = modifiedGeometry.attributes.position.count / 3;
-            if (currentTriangles < maxTriangles) {
+            if (currentTriangles < params.maxTriangles) {
                 let subdividedGeometry;
-                if (flatOnly) {
+                if (params.flatOnly) {
                     subdividedGeometry = LoopSubdivision.flat(modifiedGeometry);
                 } else {
-                    subdividedGeometry = LoopSubdivision.smooth(modifiedGeometry, uvSmooth);
+                    subdividedGeometry = LoopSubdivision.smooth(modifiedGeometry, params);
                 }
                 modifiedGeometry.dispose();
                 modifiedGeometry = subdividedGeometry;
@@ -395,7 +413,13 @@ class LoopSubdivision {
     ////////////////////
 
     /** Applies one iteration of Loop (smooth) subdivision (1 triangle split into 4 triangles) */
-    static smooth(geometry, uvSmooth = false) {
+    static smooth(geometry, params = {}) {
+
+        if (typeof params !== 'object') params = {};
+
+        ///// Parameters
+        if (params.uvSmooth === undefined) params.uvSmooth = false;
+        if (params.preserveEdges === undefined) params.preserveEdges = false;
 
         ///// Geometries
         if (! verifyGeometry(geometry)) return geometry;
@@ -411,6 +435,7 @@ class LoopSubdivision {
         const hashToIndex = {};             // Position hash mapped to index values of same position
         const existingNeighbors = {};       // Position hash mapped to existing vertex neighbors
         const flatOpposites = {};           // Position hash mapped to new edge point opposites
+        const existingEdges = {};
 
         function addNeighbor(posHash, neighborHash, index) {
             if (! existingNeighbors[posHash]) existingNeighbors[posHash] = {};
@@ -421,6 +446,11 @@ class LoopSubdivision {
         function addOpposite(posHash, index) {
             if (! flatOpposites[posHash]) flatOpposites[posHash] = [];
             flatOpposites[posHash].push(index);
+        }
+
+        function addEdgePoint(posHash, edgeHash) {
+            if (! existingEdges[posHash]) existingEdges[posHash] = new Set();
+            existingEdges[posHash].add(edgeHash);
         }
 
         ///// Existing Vertex Hashes
@@ -447,6 +477,14 @@ class LoopSubdivision {
             addOpposite(hash0to1, i + 2);
             addOpposite(hash1to2, i + 0);
             addOpposite(hash2to0, i + 1);
+
+            // Track Edges for edgePreserve
+            addEdgePoint(posHash0, hash0to1);
+            addEdgePoint(posHash0, hash2to0);
+            addEdgePoint(posHash1, hash0to1);
+            addEdgePoint(posHash1, hash1to2);
+            addEdgePoint(posHash2, hash1to2);
+            addEdgePoint(posHash2, hash2to0);
         }
 
         ///// Flat Position to Index Map
@@ -470,7 +508,7 @@ class LoopSubdivision {
             let index = 0;
             for (let i = 0; i < flat.attributes.position.count; i += 3) {
 
-                if (attributeName === 'uv' && ! uvSmooth) {
+                if (attributeName === 'uv' && ! params.uvSmooth) {
 
                     for (let v = 0; v < 3; v++) {
                         _vertex[v].fromBufferAttribute(flatAttribute, i + v);
@@ -487,7 +525,19 @@ class LoopSubdivision {
                         let opposites = flatOpposites[positionHash];
 
                         ///// Adjust Source Vertex
-                        if (neighbors) {//} && neighbors instanceof Set) {
+                        if (neighbors) {
+
+                            // Check Edges have even Opposite Points
+                            if (params.preserveEdges) {
+                                let edgeSet = existingEdges[positionHash];
+                                let hasPair = true;
+                                for (const edgeHash of edgeSet) {
+                                    if (flatOpposites[edgeHash].length % 2 !== 0) hasPair = false;
+                                }
+                                if (! hasPair) continue;
+                            }
+
+                            // Number of Neighbors
                             const k = Object.keys(neighbors).length;
 
                             ///// Loop's Formula
@@ -529,6 +579,7 @@ class LoopSubdivision {
                                 _average.multiplyScalar(beta);
                                 _vertex[v].add(_average);
                             });
+
                         }
                     }
                 }
@@ -538,8 +589,8 @@ class LoopSubdivision {
                 index += (flatAttribute.itemSize * 3);
             }
 
-            ///// Smooth 'normal's
-            if (attributeName === 'normal') {
+            ///// Smooth 'normal' Values
+            if (attributeName === 'normal') { // && params.normalSmooth) {
                 index = 0;
                 for (let i = 0; i < flat.attributes.position.count; i += 3) {
                     for (let v = 0; v < 3; v++) {

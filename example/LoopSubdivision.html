@@ -47,8 +47,8 @@
 			import { TeapotGeometry } from 'three/examples/jsm/geometries/TeapotGeometry.js';
 			import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
 
-			import { LoopSubdivision } from 'three-subdivide';
-			// import { LoopSubdivision } from '../src/LoopSubdivision.js';
+			// import { LoopSubdivision } from 'three-subdivide';
+			import { LoopSubdivision } from '../src/LoopSubdivision.js';
 
 		/* !!!!! THREE DEMO DIFF ENDS HERE  !!!!! */
 
@@ -63,9 +63,10 @@
 				iterations: 3,
 				split: true,
 				uvSmooth: false,
+				preserveEdges: false,
 				flatOnly: false,
 				maxTriangles: 25000,
-				lighting: false,
+				lighting: true,
 				wireframe: false
 			};
 
@@ -120,8 +121,8 @@
 				standardMaterial = new THREE.MeshStandardMaterial( materialParams );
 				wireMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, depthTest: true, wireframe: true } );
 
-				meshNormal = new THREE.Mesh( new THREE.BufferGeometry(), basicMaterial );
-				meshSmooth = new THREE.Mesh( new THREE.BufferGeometry(), basicMaterial );
+				meshNormal = new THREE.Mesh( new THREE.BufferGeometry(), standardMaterial );
+				meshSmooth = new THREE.Mesh( new THREE.BufferGeometry(), standardMaterial );
 				meshNormal.position.set( - 0.7, 0, 0 );
 				meshSmooth.position.set( 0.7, 0, 0 );
 				scene.add( meshNormal, meshSmooth );
@@ -149,6 +150,7 @@
 
 					params.split = geom === 'box' || geom === 'ring' || geom === 'plane';
 					params.uvSmooth = geom === 'circle' || geom === 'plane' || geom === 'ring' || geom === 'shape';
+					params.preserveEdges = geom === 'teapot';
 
 					refreshDisplay();
 
@@ -156,7 +158,8 @@
 
 				folder1.add( params, 'iterations' ).min( 0 ).max( 5 ).step( 1 ).onFinishChange( updateMeshes );
 				const splitController = folder1.add( params, 'split' ).onFinishChange( updateMeshes );
-				const smoothController = folder1.add( params, 'uvSmooth' ).onFinishChange( updateMeshes );
+				const uvSmoothController = folder1.add( params, 'uvSmooth' ).onFinishChange( updateMeshes );
+				const preserveController = folder1.add( params, 'preserveEdges' ).onFinishChange( updateMeshes );
 				folder1.add( params, 'flatOnly' ).onFinishChange ( updateMeshes );
 				folder1.add( params, 'maxTriangles' ).onFinishChange( updateMeshes );
 
@@ -168,7 +171,8 @@
 
 					geomController.updateDisplay();
 					splitController.updateDisplay();
-					smoothController.updateDisplay();
+					uvSmoothController.updateDisplay();
+					preserveController.updateDisplay();
 
 					updateMeshes();
 
@@ -181,24 +185,31 @@
 				switch ( params.geometry.toLowerCase() ) {
 
 					case 'box':
+
 						return new THREE.BoxGeometry();
 
 					case 'capsule':
+
 						return new THREE.CapsuleGeometry( 0.5, 0.5, 3, 5 );
 
 					case 'circle':
+
 						return new THREE.CircleGeometry( 0.6, 10 );
 
 					case 'cone':
+
 						return new THREE.ConeGeometry( 0.6, 1.5, 5, 3 );
 
 					case 'cylinder':
+
 						return new THREE.CylinderGeometry( 0.5, 0.5, 1, 5, 5 );
 
 					case 'dodecahedron':
+
 						return new THREE.DodecahedronGeometry( 0.6 );
 
 					case 'icosahedron':
+
 						return new THREE.IcosahedronGeometry( 0.6 );
 
 					case 'lathe':
@@ -221,12 +232,15 @@
 						return latheGeometry;
 
 					case 'octahedron':
+
 						return new THREE.OctahedronGeometry( 0.7 );
 
 					case 'plane':
+
 						return new THREE.PlaneGeometry();
 
 					case 'ring':
+
 						return new THREE.RingGeometry( 0.3, 0.6, 10 );
 
 					case 'shape':
@@ -253,6 +267,7 @@
 						return shapeGeometry;
 
 					case 'sphere':
+
 						return new THREE.SphereGeometry( 0.6, 8, 4 );
 
 					case 'teapot':
@@ -263,12 +278,15 @@
 						return teapotGeometry;
 
 					case 'tetrahedron':
+
 						return new THREE.TetrahedronGeometry( 0.8 );
 
 					case 'torus':
+
 						return new THREE.TorusGeometry( 0.48, 0.24, 4, 6 );
 
 					case 'torusknot':
+
 						return new THREE.TorusKnotGeometry( 0.38, 0.18, 20, 4 );
 
 				}
@@ -279,14 +297,7 @@
 
 				const normalGeometry = getGeometry();
 
-				const smoothGeometry = LoopSubdivision.modify(
-					normalGeometry,
-					params.iterations,
-					params.split,
-					params.uvSmooth,
-					params.flatOnly,
-					params.maxTriangles
-				);
+				const smoothGeometry = LoopSubdivision.modify( normalGeometry, params.iterations, params );
 
 				meshNormal.geometry.dispose();
 				meshSmooth.geometry.dispose();
