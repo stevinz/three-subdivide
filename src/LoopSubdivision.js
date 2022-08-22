@@ -120,6 +120,7 @@ class LoopSubdivision {
      * @param {Number} maxTriangles - If geometry contains more than this many triangles, subdivision will not continue
     */
     static modify(bufferGeometry, iterations = 1, params = {}) {
+        if (arguments.length > 3) console.warn(`LoopSubdivision.modify() now uses a parameter object. See readme for more info!`);
 
         if (typeof params !== 'object') params = {};
 
@@ -374,38 +375,57 @@ class LoopSubdivision {
             const attribute = existing.getAttribute(attributeName);
             if (! attribute) return;
 
-            const attributeArrayType = attribute.array.constructor;
-            const newTriangles = 4;
-            const arrayLength = (vertexCount * attribute.itemSize) * newTriangles;
-            const floatArray = new attributeArrayType(arrayLength);
-
-            let index = 0;
-            let step = attribute.itemSize;
-            for (let i = 0; i < vertexCount; i += 3) {
-
-                // Original Vertices
-                _vector0.fromBufferAttribute(attribute, i + 0);
-                _vector1.fromBufferAttribute(attribute, i + 1);
-                _vector2.fromBufferAttribute(attribute, i + 2);
-
-                // Midpoints
-                _vec0to1.copy(_vector0).add(_vector1).divideScalar(2.0);
-                _vec1to2.copy(_vector1).add(_vector2).divideScalar(2.0);
-                _vec2to0.copy(_vector2).add(_vector0).divideScalar(2.0);
-
-                // Add New Triangle Positions
-                setTriangle(floatArray, index, step, _vector0, _vec0to1, _vec2to0); index += (step * 3);
-                setTriangle(floatArray, index, step, _vector1, _vec1to2, _vec0to1); index += (step * 3);
-                setTriangle(floatArray, index, step, _vector2, _vec2to0, _vec1to2); index += (step * 3);
-                setTriangle(floatArray, index, step, _vec0to1, _vec1to2, _vec2to0); index += (step * 3);
-            }
-
-            loop.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, attribute.itemSize));
+            loop.setAttribute(attributeName, LoopSubdivision.flatAttribute(attribute, vertexCount));
         });
+
+        ///// Morph Attributes
+        const morphAttributes = existing.morphAttributes;
+        for (const attributeName in morphAttributes) {
+            const array = [];
+			const morphAttribute = morphAttributes[attributeName];
+
+            // Process Array of Float32BufferAttributes
+			for (let i = 0, l = morphAttribute.length; i < l; i++) {
+                if (morphAttribute[i].count !== vertexCount) continue;
+                array.push(LoopSubdivision.flatAttribute(morphAttribute[i], vertexCount));
+			}
+			loop.morphAttributes[attributeName] = array;
+		}
+		loop.morphTargetsRelative = existing.morphTargetsRelative;
 
         ///// Clean Up
         existing.dispose();
         return loop;
+    }
+
+    static flatAttribute(attribute, vertexCount) {
+        const attributeArrayType = attribute.array.constructor;
+        const newTriangles = 4;
+        const arrayLength = (vertexCount * attribute.itemSize) * newTriangles;
+        const floatArray = new attributeArrayType(arrayLength);
+
+        let index = 0;
+        let step = attribute.itemSize;
+        for (let i = 0; i < vertexCount; i += 3) {
+
+            // Original Vertices
+            _vector0.fromBufferAttribute(attribute, i + 0);
+            _vector1.fromBufferAttribute(attribute, i + 1);
+            _vector2.fromBufferAttribute(attribute, i + 2);
+
+            // Midpoints
+            _vec0to1.copy(_vector0).add(_vector1).divideScalar(2.0);
+            _vec1to2.copy(_vector1).add(_vector2).divideScalar(2.0);
+            _vec2to0.copy(_vector2).add(_vector0).divideScalar(2.0);
+
+            // Add New Triangle Positions
+            setTriangle(floatArray, index, step, _vector0, _vec0to1, _vec2to0); index += (step * 3);
+            setTriangle(floatArray, index, step, _vector1, _vec1to2, _vec0to1); index += (step * 3);
+            setTriangle(floatArray, index, step, _vector2, _vec2to0, _vec1to2); index += (step * 3);
+            setTriangle(floatArray, index, step, _vec0to1, _vec1to2, _vec2to0); index += (step * 3);
+        }
+
+        return new THREE.BufferAttribute(floatArray, attribute.itemSize);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -494,28 +514,56 @@ class LoopSubdivision {
             hashToIndex[posHash].push(i);
         }
 
-        ///// Build Geometry
+        ///// Build Geometry, Set Attributes
         attributeList.forEach((attributeName) => {
             const existingAttribute = existing.getAttribute(attributeName);
-            const existingArrayType = existingAttribute.array.constructor;
             const flatAttribute = flat.getAttribute(attributeName);
-            const flatPosition = flat.getAttribute('position');
             if (existingAttribute === undefined || flatAttribute === undefined) return;
 
+            const floatArray = subdivideAttribute(attributeName, existingAttribute, flatAttribute);
+            loop.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, flatAttribute.itemSize));
+        });
+
+        ///// Morph Attributes
+        const morphAttributes = existing.morphAttributes;
+        for (const attributeName in morphAttributes) {
+            const array = [];
+			const morphAttribute = morphAttributes[attributeName];
+
+            // Process Array of Float32BufferAttributes
+			for (let i = 0, l = morphAttribute.length; i < l; i++) {
+                if (morphAttribute[i].count !== vertexCount) continue;
+                const existingAttribute = morphAttribute[i];
+                const flatAttribute = LoopSubdivision.flatAttribute(morphAttribute[i], morphAttribute[i].count)
+
+                const floatArray = subdivideAttribute(attributeName, existingAttribute, flatAttribute);
+                array.push(new THREE.BufferAttribute(floatArray, flatAttribute.itemSize));
+			}
+			loop.morphAttributes[attributeName] = array;
+		}
+		loop.morphTargetsRelative = existing.morphTargetsRelative;
+
+        ///// Clean Up
+        flat.dispose();
+        existing.dispose();
+        return loop;
+
+        //////////
+
+        // Loop Subdivide Function
+        function subdivideAttribute(attributeName, existingAttribute, flatAttribute) {
             const arrayLength = (flat.attributes.position.count * flatAttribute.itemSize);
-            const floatArray = new existingArrayType(arrayLength);
+            const floatArray = new existingAttribute.array.constructor(arrayLength);
 
             let index = 0;
             for (let i = 0; i < flat.attributes.position.count; i += 3) {
 
                 if (attributeName === 'uv' && ! params.uvSmooth) {
-
                     for (let v = 0; v < 3; v++) {
                         _vertex[v].fromBufferAttribute(flatAttribute, i + v);
                     }
 
                 } else { // 'normal', 'position', 'color', etc...
-
                     for (let v = 0; v < 3; v++) {
                         _vertex[v].fromBufferAttribute(flatAttribute, i + v);
                         _position[v].fromBufferAttribute(flatPosition, i + v);
@@ -568,7 +616,6 @@ class LoopSubdivision {
 
                         ///// Newly Added Edge Vertex
                         } else if (opposites && opposites.length === 2) {
-
                             const k = opposites.length;
                             const beta = 0.125; /* 1/8 */
                             const startWeight = 1.0 - (beta * k);
@@ -579,7 +626,6 @@ class LoopSubdivision {
                                 _average.multiplyScalar(beta);
                                 _vertex[v].add(_average);
                             });
-
                         }
                     }
                 }
@@ -622,14 +668,9 @@ class LoopSubdivision {
                 index += (flatAttribute.itemSize * 3);
             }
 
-            ///// Set Attribute
-            loop.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, flatAttribute.itemSize));
-        });
+            return floatArray;
+        }
 
-        ///// Clean Up
-        flat.dispose();
-        existing.dispose();
-        return loop;
     }
 
 }

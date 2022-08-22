@@ -2,7 +2,11 @@
 
 This modifier uses the [Loop](https://en.wikipedia.org/wiki/Loop_subdivision_surface) (Charles Loop, 1987) subdivision surface algorithm to smooth modern three.js [BufferGeometry](https://threejs.org/docs/?q=geometry#api/en/core/BufferGeometry).
 
-<p align="center"">&mdash; <a href='https://stevinz.github.io/three-subdivide'>Live Demo</a> &mdash;</p>
+## Demos
+
+- <a href='https://stevinz.github.io/three-subdivide/LoopSubdivision.html'>Three.js Built-In Geometries</a>
+
+- <a href='https://stevinz.github.io/three-subdivide/MorphTargets.html'>Morph Target Animation</a>
 
 ## Screenshot
 
@@ -46,7 +50,17 @@ To create subdivided geometry, use the static function `modify()`. The following
 import * as THREE from 'three';
 import { LoopSubdivision } from 'LoopSubdivision.js';
 
-const geometry = LoopSubdivision.modify(new THREE.BoxGeometry());
+const iterations = 1;
+
+const params = {
+    split:			false,		// optional, default: true
+    uvSmooth:		false,		// optional, default: false
+    preserveEdges:	true,		// optional, default: false
+    flatOnly:		true,		// optional, default: false
+    maxTriangles:	Infinity,	// optional, default: Infinity
+};
+
+const geometry = LoopSubdivision.modify(new THREE.BoxGeometry(), iterations, params);
 
 const material = new THREE.MeshNormalMaterial();
 const mesh = new THREE.Mesh(geometry, material);
@@ -57,14 +71,19 @@ scene.add(mesh);
 
 ## Modify
 
-LoopSubdivision.modify(bufferGeometry, iterations = 1, split = true, uvSmooth = false, flatOnly = false, maxTriangles = Infinity)
+LoopSubdivision.modify(bufferGeometry, iterations = 1, params = {}) {
 
-- [bufferGeometry]() : BufferGeometry - existing three.js BufferGeometry object.
-- [iterations]() : Int (optional) - total passes of subdivision to apply, generally between 1 to 5.
+- [bufferGeometry]() : BufferGeometry - existing three.js BufferGeometry object to be subdivided
+- [iterations]() : Int (optional) - total passes of subdivision to apply, generally between 1 to 5
+- [params]() : Object (optional) - optional parameters object, see below
+
+Parameters Object ('params')
+
 - [split]() : Boolean (optional) - split coplanar faces at their shared edges before subdividing?
 - [uvSmooth]() : Boolean (optional) - smooth UV coordinates during subdivision?
+- [preserveEdges]() Boolean (optional) - should edges / breaks in geometry be ignored during subdivision?
 - [flatOnly]() : Boolean (optioanl) - subdivide triangles but do not apply smoothing?
-- [maxTriangles]() : Number (optional) - limits subdivision to meshes with less than this number of triangles.
+- [maxTriangles]() : Number (optional) - limits subdivision to meshes with less than this number of triangles
 
 > NOTE: This modifier converts geometry to non-indexed before the subdivision algorithm is applied. If desired, you can use [BufferGeometryUtils.mergeVertices](https://threejs.org/docs/?q=buffer#examples/en/utils/BufferGeometryUtils.mergeVertices) to re-index geometry.
 
