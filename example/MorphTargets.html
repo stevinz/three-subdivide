@@ -51,8 +51,7 @@
 
 			import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 
-			// import { LoopSubdivision } from 'three-subdivide';
-			import { LoopSubdivision } from '../src/LoopSubdivision.js';
+			import { LoopSubdivision } from 'three-subdivide';
 
 			let container, stats;
 			let camera, scene, renderer;
@@ -102,11 +101,7 @@
 
 					//
 
-					const params = {
-						// flatOnly: true,
-					};
-
-					const geometry = LoopSubdivision.modify( mesh.geometry, 1, params );
+					const geometry = LoopSubdivision.modify( mesh.geometry, 2 );
 					const material = mesh.material.clone();
 					material.flatShading = false;
 

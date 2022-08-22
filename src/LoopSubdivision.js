@@ -238,15 +238,39 @@ class LoopSubdivision {
             triangleEdgeHashes.push([ hashes[0], hashes[2], hashes[4] ]);
         }
 
-        ///// Build Geometry
+        ///// Build Geometry, Set Attributes
         attributeList.forEach((attributeName) => {
             const attribute = existing.getAttribute(attributeName);
             if (! attribute) return;
-            const attributeArrayType = attribute.array.constructor;
+            const floatArray = splitAttribute(attribute);
+            split.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, attribute.itemSize));
+        });
 
+        ///// Morph Attributes
+        const morphAttributes = existing.morphAttributes;
+        for (const attributeName in morphAttributes) {
+            const array = [];
+			const morphAttribute = morphAttributes[attributeName];
+
+            // Process Array of Float32BufferAttributes
+			for (let i = 0, l = morphAttribute.length; i < l; i++) {
+                if (morphAttribute[i].count !== vertexCount) continue;
+                const floatArray = splitAttribute(morphAttribute[i]);
+                array.push(new THREE.BufferAttribute(floatArray, morphAttribute[i].itemSize));
+			}
+			split.morphAttributes[attributeName] = array;
+		}
+		split.morphTargetsRelative = existing.morphTargetsRelative;
+
+        // Clean Up, Return New Geometry
+        existing.dispose();
+        return split;
+
+        // Loop Subdivide Function
+        function splitAttribute(attribute) {
             const newTriangles = 4; /* maximum number of new triangles */
             const arrayLength = (vertexCount * attribute.itemSize) * newTriangles;
-            const floatArray = new attributeArrayType(arrayLength);
+            const floatArray = new attribute.array.constructor(arrayLength);
 
             let index = 0;
             let step = attribute.itemSize;
@@ -340,18 +364,13 @@ class LoopSubdivision {
 
             // Resize Array
             const reducedCount = (index * 3) / step;
-            const reducedArray = new attributeArrayType(reducedCount);
+            const reducedArray = new attribute.array.constructor(reducedCount);
             for (let i = 0; i < reducedCount; i++) {
                 reducedArray[i] = floatArray[i];
             }
 
-            // Set Attribute
-            split.setAttribute(attributeName, new THREE.BufferAttribute(reducedArray, attribute.itemSize));
-        });
-
-        // Clean Up, Return New Geometry
-        existing.dispose();
-        return split;
+            return reducedArray;
+        }
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
@@ -399,10 +418,9 @@ class LoopSubdivision {
     }
 
     static flatAttribute(attribute, vertexCount) {
-        const attributeArrayType = attribute.array.constructor;
         const newTriangles = 4;
         const arrayLength = (vertexCount * attribute.itemSize) * newTriangles;
-        const floatArray = new attributeArrayType(arrayLength);
+        const floatArray = new attribute.array.constructor(arrayLength);
 
         let index = 0;
         let step = attribute.itemSize;
