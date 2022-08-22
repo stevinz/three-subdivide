@@ -53,11 +53,11 @@ import { LoopSubdivision } from 'LoopSubdivision.js';
 const iterations = 1;
 
 const params = {
-    split:			false,		// optional, default: true
-    uvSmooth:		false,		// optional, default: false
-    preserveEdges:	true,		// optional, default: false
-    flatOnly:		true,		// optional, default: false
-    maxTriangles:	Infinity,	// optional, default: Infinity
+    split:          false,      // optional, default: true
+    uvSmooth:       false,      // optional, default: false
+    preserveEdges:  true,       // optional, default: false
+    flatOnly:       true,       // optional, default: false
+    maxTriangles:   Infinity,   // optional, default: Infinity
 };
 
 const geometry = LoopSubdivision.modify(new THREE.BoxGeometry(), iterations, params);
