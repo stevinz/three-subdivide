@@ -761,6 +761,11 @@ function setTriangle(positions, index, step, vec0, vec1, vec2) {
 }
 
 function verifyGeometry(geometry) {
+    if (geometry === undefined) {
+        console.warn(`LoopSubdivision: Geometry is undefined`);
+        return false;
+    }
+
     if (! geometry.isBufferGeometry) {
         console.warn(`LoopSubdivision: Geometry must be 'BufferGeometry' type`);
         return false;
