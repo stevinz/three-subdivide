@@ -140,14 +140,6 @@ class LoopSubdivision {
             const splitGeometry = LoopSubdivision.edgeSplit(modifiedGeometry)
             modifiedGeometry.dispose();
             modifiedGeometry = splitGeometry;
-
-            bufferGeometry.groups.forEach((group) => {
-                modifiedGeometry.groups.push({
-                    start: group.start * multiplier,
-                    count: group.count * multiplier,
-                    materialIndex: group.materialIndex,
-                });
-            });
         }
 
         ///// Apply Subdivision
@@ -165,15 +157,9 @@ class LoopSubdivision {
             }
         }
 
-<<<<<<< Updated upstream
-	///// Copy and resize groups
-        const multiplier = Math.pow(4, iterations);
-        bufferGeometry.groups.forEach(group => {
-=======
         ///// Copy and Resize Groups
         const multiplier = Math.pow(4, iterations);
         bufferGeometry.groups.forEach((group) => {
->>>>>>> Stashed changes
             modifiedGeometry.groups.push({
                 start: group.start * multiplier,
                 count: group.count * multiplier,
