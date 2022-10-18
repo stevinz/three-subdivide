@@ -31,31 +31,38 @@
 	 		{
 		 		"imports": {
 			 		"three": "https://unpkg.com/three@0.143.0/build/three.module.js",
-					"three/examples/": "https://unpkg.com/three@0.143.0/examples/",
-					"three-subdivide": "https://unpkg.com/three-subdivide@1.1.0/build/index.module.js"
+					"three/addons/": "https://unpkg.com/three@0.143.0/examples/jsm/",
+					"three-subdivide": "../src/LoopSubdivision.js"
 		 		}
 	 		}
  		</script>
+
+		<!-- IMPORT: "three-subdivide": "https://unpkg.com/three-subdivide@1.1.0/build/index.module.js" -->
 
 		<script type="module">
 
 			import * as THREE from 'three';
 
-			import { GUI } from 'three/examples/jsm/libs/lil-gui.module.min.js';
+			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
-			import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-			import { TeapotGeometry } from 'three/examples/jsm/geometries/TeapotGeometry.js';
-			import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+			import { TeapotGeometry } from 'three/addons/geometries/TeapotGeometry.js';
+			import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 			import { LoopSubdivision } from 'three-subdivide';
 
 		/* !!!!! THREE DEMO DIFF ENDS HERE  !!!!! */
 
 			let renderer, scene, camera;
-			let texture;
-			let basicMaterial, standardMaterial, wireMaterial;
+			let texture, topTexture, botTexture;
 			let meshNormal, meshSmooth;
 			let wireNormal, wireSmooth;
+
+			let basicMaterial, standardMaterial, wireMaterial;
+			let topBasicMaterial, topStandardMaterial;
+			let botBasicMaterial, botStandardMaterial;
+			let boxBasicMaterial, boxStandardMaterial;
+			let cylinderBasicMaterial, cylinderStandardMaterial;
 
 			const params = {
 				geometry: 'Box',
@@ -99,14 +106,18 @@
 				backLight.position.set( 0, 1, - 1 );
 				scene.add( frontLight, backLight );
 
-				texture = new THREE.TextureLoader().load( './textures/uv_grid_opengl.jpg', () => {
+				function textureLoaded( newTexture ) {
 
-					texture.wrapS = THREE.RepeatWrapping;
-					texture.wrapT = THREE.RepeatWrapping;
+					newTexture.wrapS = THREE.RepeatWrapping;
+					newTexture.wrapT = THREE.RepeatWrapping;
 
 					render();
 
-				} );
+				}
+
+				texture = new THREE.TextureLoader().load( './textures/uv_grid_opengl.jpg', textureLoaded );
+				topTexture = new THREE.TextureLoader().load( './textures/uv_grid_opengl_top.jpg', textureLoaded );
+				botTexture = new THREE.TextureLoader().load( './textures/uv_grid_opengl_bot.jpg', textureLoaded );
 
 				const materialParams = {
 					map: texture,
@@ -116,9 +127,21 @@
 					side: THREE.DoubleSide
 				};
 
+				wireMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, depthTest: true, wireframe: true } );
+
 				basicMaterial = new THREE.MeshBasicMaterial( materialParams );
 				standardMaterial = new THREE.MeshStandardMaterial( materialParams );
-				wireMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, depthTest: true, wireframe: true } );
+				materialParams.map = topTexture;
+				topBasicMaterial = new THREE.MeshBasicMaterial( materialParams );
+				topStandardMaterial = new THREE.MeshStandardMaterial( materialParams );
+				materialParams.map = botTexture;
+				botBasicMaterial = new THREE.MeshBasicMaterial( materialParams );
+				botStandardMaterial = new THREE.MeshStandardMaterial( materialParams );
+
+				boxBasicMaterial = [ basicMaterial, basicMaterial, basicMaterial, basicMaterial, basicMaterial, basicMaterial ];
+				boxStandardMaterial = [ standardMaterial, standardMaterial, standardMaterial, standardMaterial, topStandardMaterial, botStandardMaterial ];
+				cylinderBasicMaterial = [ basicMaterial, topBasicMaterial, botBasicMaterial ];
+				cylinderStandardMaterial = [ standardMaterial, topStandardMaterial, botStandardMaterial ];
 
 				meshNormal = new THREE.Mesh( new THREE.BufferGeometry(), standardMaterial );
 				meshSmooth = new THREE.Mesh( new THREE.BufferGeometry(), standardMaterial );
@@ -308,13 +331,31 @@
 				wireNormal.geometry = normalGeometry.clone();
 				wireSmooth.geometry = smoothGeometry.clone();
 
+				updateView();
+
 				render();
 
 			}
 
 			function updateView() {
 
-				meshNormal.material = meshSmooth.material = ( params.lighting ) ? standardMaterial : basicMaterial;
+				switch ( params.geometry.toLowerCase() ) {
+
+					case 'box':
+
+						meshNormal.material = meshSmooth.material = ( params.lighting ) ? boxStandardMaterial : boxBasicMaterial;
+						break;
+
+					case 'cylinder':
+
+						meshNormal.material = meshSmooth.material = ( params.lighting ) ? cylinderStandardMaterial : cylinderBasicMaterial;
+						break;
+
+					default:
+
+						meshNormal.material = meshSmooth.material = ( params.lighting ) ? standardMaterial : basicMaterial;
+
+				}
 
 				wireNormal.visible = wireSmooth.visible = params.wireframe;
 

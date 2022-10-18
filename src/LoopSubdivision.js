@@ -140,6 +140,14 @@ class LoopSubdivision {
             const splitGeometry = LoopSubdivision.edgeSplit(modifiedGeometry)
             modifiedGeometry.dispose();
             modifiedGeometry = splitGeometry;
+
+            bufferGeometry.groups.forEach((group) => {
+                modifiedGeometry.groups.push({
+                    start: group.start * multiplier,
+                    count: group.count * multiplier,
+                    materialIndex: group.materialIndex,
+                });
+            });
         }
 
         ///// Apply Subdivision
@@ -157,9 +165,15 @@ class LoopSubdivision {
             }
         }
 
+<<<<<<< Updated upstream
 	///// Copy and resize groups
         const multiplier = Math.pow(4, iterations);
         bufferGeometry.groups.forEach(group => {
+=======
+        ///// Copy and Resize Groups
+        const multiplier = Math.pow(4, iterations);
+        bufferGeometry.groups.forEach((group) => {
+>>>>>>> Stashed changes
             modifiedGeometry.groups.push({
                 start: group.start * multiplier,
                 count: group.count * multiplier,
@@ -260,17 +274,17 @@ class LoopSubdivision {
         const morphAttributes = existing.morphAttributes;
         for (const attributeName in morphAttributes) {
             const array = [];
-			const morphAttribute = morphAttributes[attributeName];
+            const morphAttribute = morphAttributes[attributeName];
 
             // Process Array of Float32BufferAttributes
-			for (let i = 0, l = morphAttribute.length; i < l; i++) {
+            for (let i = 0, l = morphAttribute.length; i < l; i++) {
                 if (morphAttribute[i].count !== vertexCount) continue;
                 const floatArray = splitAttribute(morphAttribute[i]);
                 array.push(new THREE.BufferAttribute(floatArray, morphAttribute[i].itemSize));
-			}
-			split.morphAttributes[attributeName] = array;
-		}
-		split.morphTargetsRelative = existing.morphTargetsRelative;
+            }
+            split.morphAttributes[attributeName] = array;
+        }
+        split.morphTargetsRelative = existing.morphTargetsRelative;
 
         // Clean Up, Return New Geometry
         existing.dispose();
@@ -411,16 +425,16 @@ class LoopSubdivision {
         const morphAttributes = existing.morphAttributes;
         for (const attributeName in morphAttributes) {
             const array = [];
-			const morphAttribute = morphAttributes[attributeName];
+            const morphAttribute = morphAttributes[attributeName];
 
             // Process Array of Float32BufferAttributes
 			for (let i = 0, l = morphAttribute.length; i < l; i++) {
                 if (morphAttribute[i].count !== vertexCount) continue;
                 array.push(LoopSubdivision.flatAttribute(morphAttribute[i], vertexCount));
-			}
-			loop.morphAttributes[attributeName] = array;
-		}
-		loop.morphTargetsRelative = existing.morphTargetsRelative;
+            }
+            loop.morphAttributes[attributeName] = array;
+        }
+        loop.morphTargetsRelative = existing.morphTargetsRelative;
 
         ///// Clean Up
         existing.dispose();
@@ -556,20 +570,20 @@ class LoopSubdivision {
         const morphAttributes = existing.morphAttributes;
         for (const attributeName in morphAttributes) {
             const array = [];
-			const morphAttribute = morphAttributes[attributeName];
+            const morphAttribute = morphAttributes[attributeName];
 
             // Process Array of Float32BufferAttributes
-			for (let i = 0, l = morphAttribute.length; i < l; i++) {
+            for (let i = 0, l = morphAttribute.length; i < l; i++) {
                 if (morphAttribute[i].count !== vertexCount) continue;
                 const existingAttribute = morphAttribute[i];
                 const flatAttribute = LoopSubdivision.flatAttribute(morphAttribute[i], morphAttribute[i].count)
 
                 const floatArray = subdivideAttribute(attributeName, existingAttribute, flatAttribute);
                 array.push(new THREE.BufferAttribute(floatArray, flatAttribute.itemSize));
-			}
-			loop.morphAttributes[attributeName] = array;
-		}
-		loop.morphTargetsRelative = existing.morphTargetsRelative;
+            }
+            loop.morphAttributes[attributeName] = array;
+        }
+        loop.morphTargetsRelative = existing.morphTargetsRelative;
 
         ///// Clean Up
         flat.dispose();
