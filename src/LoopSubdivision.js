@@ -157,6 +157,16 @@ class LoopSubdivision {
             }
         }
 
+	///// Copy and resize groups
+        const multiplier = Math.pow(4, iterations);
+        bufferGeometry.groups.forEach(group => {
+            modifiedGeometry.groups.push({
+                start: group.start * multiplier,
+                count: group.count * multiplier,
+                materialIndex: group.materialIndex,
+            });
+        });
+
         return modifiedGeometry;
     }
 
