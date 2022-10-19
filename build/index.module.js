@@ -99,16 +99,26 @@ class LoopSubdivision {
             let currentTriangles = modifiedGeometry.attributes.position.count / 3;
             if (currentTriangles < params.maxTriangles) {
                 let subdividedGeometry;
+
+                // Subdivide
                 if (params.flatOnly) {
                     subdividedGeometry = LoopSubdivision.flat(modifiedGeometry);
                 } else {
                     subdividedGeometry = LoopSubdivision.smooth(modifiedGeometry, params);
                 }
+
+                // Copy and Resize Groups
+                modifiedGeometry.groups.forEach((group) => {
+                    subdividedGeometry.addGroup(group.start * 4, group.count * 4, group.materialIndex);
+                });
+
+                // Clean Up
                 modifiedGeometry.dispose();
                 modifiedGeometry = subdividedGeometry;
             }
         }
 
+        ///// Return New Geometry
         return modifiedGeometry;
     }
 
@@ -140,6 +150,7 @@ class LoopSubdivision {
 
         ///// Edges
         for (let i = 0; i < vertexCount; i += 3) {
+
             // Positions
             _vector0.fromBufferAttribute(posAttribute, i + 0);
             _vector1.fromBufferAttribute(posAttribute, i + 1);
@@ -194,7 +205,7 @@ class LoopSubdivision {
         attributeList.forEach((attributeName) => {
             const attribute = existing.getAttribute(attributeName);
             if (! attribute) return;
-            const floatArray = splitAttribute(attribute);
+            const floatArray = splitAttribute(attribute, attributeName);
             split.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, attribute.itemSize));
         });
 
@@ -202,33 +213,43 @@ class LoopSubdivision {
         const morphAttributes = existing.morphAttributes;
         for (const attributeName in morphAttributes) {
             const array = [];
-			const morphAttribute = morphAttributes[attributeName];
+            const morphAttribute = morphAttributes[attributeName];
 
             // Process Array of Float32BufferAttributes
-			for (let i = 0, l = morphAttribute.length; i < l; i++) {
+            for (let i = 0, l = morphAttribute.length; i < l; i++) {
                 if (morphAttribute[i].count !== vertexCount) continue;
-                const floatArray = splitAttribute(morphAttribute[i]);
+                const floatArray = splitAttribute(morphAttribute[i], attributeName, true);
                 array.push(new THREE.BufferAttribute(floatArray, morphAttribute[i].itemSize));
-			}
-			split.morphAttributes[attributeName] = array;
-		}
-		split.morphTargetsRelative = existing.morphTargetsRelative;
+            }
+            split.morphAttributes[attributeName] = array;
+        }
+        split.morphTargetsRelative = existing.morphTargetsRelative;
 
         // Clean Up, Return New Geometry
         existing.dispose();
         return split;
 
         // Loop Subdivide Function
-        function splitAttribute(attribute) {
+        function splitAttribute(attribute, attributeName, morph = false) {
             const newTriangles = 4; /* maximum number of new triangles */
             const arrayLength = (vertexCount * attribute.itemSize) * newTriangles;
             const floatArray = new attribute.array.constructor(arrayLength);
 
+            const processGroups = (attributeName === 'position' && ! morph && existing.groups.length > 0);
+            let groupStart = undefined, groupMaterial = undefined;
+
             let index = 0;
+            let skipped = 0;
             let step = attribute.itemSize;
             for (let i = 0; i < vertexCount; i += 3) {
-                if (! triangleExist[i / 3]) continue;
 
+                // Verify Triangle is Valid
+                if (! triangleExist[i / 3]) {
+                    skipped += 3;
+                    continue;
+                }
+
+                // Get Triangle Points
                 _vector0.fromBufferAttribute(attribute, i + 0);
                 _vector1.fromBufferAttribute(attribute, i + 1);
                 _vector2.fromBufferAttribute(attribute, i + 2);
@@ -243,6 +264,9 @@ class LoopSubdivision {
                 const edgeCount1to2 = edgeHashToTriangle[edgeHash1to2].length;
                 const edgeCount2to0 = edgeHashToTriangle[edgeHash2to0].length;
                 const sharedCount = (edgeCount0to1 + edgeCount1to2 + edgeCount2to0) - 3;
+
+                // New Index (Before New Triangles, used for Groups)
+                const loopStartIndex = ((index * 3) / step) / 3;
 
                 // No Shared Edges
                 if (sharedCount === 0) {
@@ -310,8 +334,23 @@ class LoopSubdivision {
                     } else {
                         setTriangle(floatArray, index, step, _vector0, _vector1, _vector2); index += (step * 3);
                     }
-
                 }
+
+                // Process Groups
+                if (processGroups) {
+                    existing.groups.forEach((group) => {
+                        if (group.start === (i - skipped)) {
+                            if (groupStart !== undefined && groupMaterial !== undefined) {
+                                split.addGroup(groupStart, loopStartIndex - groupStart, groupMaterial);
+                            }
+                            groupStart = loopStartIndex;
+                            groupMaterial = group.materialIndex;
+                        }
+                    });
+                }
+
+                // Reset Skipped Triangle Counter
+                skipped = 0;
             }
 
             // Resize Array
@@ -319,6 +358,11 @@ class LoopSubdivision {
             const reducedArray = new attribute.array.constructor(reducedCount);
             for (let i = 0; i < reducedCount; i++) {
                 reducedArray[i] = floatArray[i];
+            }
+
+            // Final Group
+            if (processGroups && groupStart !== undefined && groupMaterial !== undefined) {
+                split.addGroup(groupStart, (((index * 3) / step) / 3) - groupStart, groupMaterial);
             }
 
             return reducedArray;
@@ -353,16 +397,16 @@ class LoopSubdivision {
         const morphAttributes = existing.morphAttributes;
         for (const attributeName in morphAttributes) {
             const array = [];
-			const morphAttribute = morphAttributes[attributeName];
+            const morphAttribute = morphAttributes[attributeName];
 
             // Process Array of Float32BufferAttributes
 			for (let i = 0, l = morphAttribute.length; i < l; i++) {
                 if (morphAttribute[i].count !== vertexCount) continue;
                 array.push(LoopSubdivision.flatAttribute(morphAttribute[i], vertexCount));
-			}
-			loop.morphAttributes[attributeName] = array;
-		}
-		loop.morphTargetsRelative = existing.morphTargetsRelative;
+            }
+            loop.morphAttributes[attributeName] = array;
+        }
+        loop.morphTargetsRelative = existing.morphTargetsRelative;
 
         ///// Clean Up
         existing.dispose();
@@ -498,20 +542,20 @@ class LoopSubdivision {
         const morphAttributes = existing.morphAttributes;
         for (const attributeName in morphAttributes) {
             const array = [];
-			const morphAttribute = morphAttributes[attributeName];
+            const morphAttribute = morphAttributes[attributeName];
 
             // Process Array of Float32BufferAttributes
-			for (let i = 0, l = morphAttribute.length; i < l; i++) {
+            for (let i = 0, l = morphAttribute.length; i < l; i++) {
                 if (morphAttribute[i].count !== vertexCount) continue;
                 const existingAttribute = morphAttribute[i];
                 const flatAttribute = LoopSubdivision.flatAttribute(morphAttribute[i], morphAttribute[i].count);
 
                 const floatArray = subdivideAttribute(attributeName, existingAttribute, flatAttribute);
                 array.push(new THREE.BufferAttribute(floatArray, flatAttribute.itemSize));
-			}
-			loop.morphAttributes[attributeName] = array;
-		}
-		loop.morphTargetsRelative = existing.morphTargetsRelative;
+            }
+            loop.morphAttributes[attributeName] = array;
+        }
+        loop.morphTargetsRelative = existing.morphTargetsRelative;
 
         ///// Clean Up
         flat.dispose();
@@ -713,6 +757,11 @@ function setTriangle(positions, index, step, vec0, vec1, vec2) {
 }
 
 function verifyGeometry(geometry) {
+    if (geometry === undefined) {
+        console.warn(`LoopSubdivision: Geometry is undefined`);
+        return false;
+    }
+
     if (! geometry.isBufferGeometry) {
         console.warn(`LoopSubdivision: Geometry must be 'BufferGeometry' type`);
         return false;
