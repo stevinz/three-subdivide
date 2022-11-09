@@ -13,8 +13,6 @@
 			See external <a href="https://github.com/stevinz/three-subdivide" target="_blank" rel="noopener">three-subdivide</a> for more information on subdivision surfaces.
 		</div>
 
-<!-- !!!!! THREE-EXAMPLE DIFF STARTS HERE !!!!! -->
-
 		<a href="https://github.com/stevinz/three-subdivide" class="github-corner" aria-label="View source on GitHub">
 			<svg width="80" height="80" viewBox="0 0 250 250" style="fill:#08f; color:#222; position: absolute; top: 0; border: 0; left: 0; transform: scale(-1, 1);" aria-hidden="true">
 				<path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path>
@@ -30,15 +28,12 @@
  		<script type='importmap'>
 	 		{
 		 		"imports": {
-			 		"three": "https://unpkg.com/three@0.145.0/build/three.module.js",
-					"three/addons/": "https://unpkg.com/three@0.145.0/examples/jsm/",
-					"three-subdivide": "https://unpkg.com/three-subdivide@1.1.1/build/index.module.js"
+			 		"three": "https://unpkg.com/three@0.146.0/build/three.module.js",
+					"three/addons/": "https://unpkg.com/three@0.146.0/examples/jsm/",
+					"three-subdivide": "https://unpkg.com/three-subdivide@1.1.2/build/index.module.js"
 		 		}
 	 		}
  		</script>
-
-		<!-- IMPORT CDN: 	"three-subdivide": "https://unpkg.com/three-subdivide@1.1.1/build/index.module.js" -->
-		<!-- IMPORT LOCAL:	"three-subdivide": "../src/LoopSubdivision.js" -->
 
 		<script type="module">
 
@@ -51,22 +46,16 @@
 			import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 			import { LoopSubdivision } from 'three-subdivide';
-
-/* !!!!! THREE-EXAMPLE DIFF ENDS HERE  !!!!! */
+			// import { LoopSubdivision } from '../src/LoopSubdivision.js';
 
 			let renderer, scene, camera;
 			let texture, topTexture, botTexture;
 			let meshNormal, meshSmooth;
 			let wireNormal, wireSmooth;
-
-			let basicMaterial, standardMaterial, wireMaterial;
-			let topBasicMaterial, topStandardMaterial;
-			let botBasicMaterial, botStandardMaterial;
-
-			let boxBasicMaterial, boxStandardMaterial;
-			let cylinderBasicMaterial, cylinderStandardMaterial;
+			let wireMaterial;
 
 			const params = {
+				// subdivide
 				geometry: 'Box',
 				iterations: 3,
 				split: true,
@@ -74,7 +63,9 @@
 				preserveEdges: false,
 				flatOnly: false,
 				maxTriangles: 25000,
-				lighting: true,
+				// material
+				flatShading: false,
+				textured: true,
 				wireframe: false
 			};
 
@@ -121,32 +112,10 @@
 				topTexture = new THREE.TextureLoader().load( './textures/uv_grid_opengl_top.jpg', textureLoaded );
 				botTexture = new THREE.TextureLoader().load( './textures/uv_grid_opengl_bot.jpg', textureLoaded );
 
-				const materialParams = {
-					map: texture,
-					polygonOffset: true,
-					polygonOffsetFactor: 1, // positive value pushes polygon further away
-					polygonOffsetUnits: 1,
-					side: THREE.DoubleSide
-				};
-
 				wireMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, depthTest: true, wireframe: true } );
 
-				basicMaterial = new THREE.MeshBasicMaterial( materialParams );
-				standardMaterial = new THREE.MeshStandardMaterial( materialParams );
-				materialParams.map = topTexture;
-				topBasicMaterial = new THREE.MeshBasicMaterial( materialParams );
-				topStandardMaterial = new THREE.MeshStandardMaterial( materialParams );
-				materialParams.map = botTexture;
-				botBasicMaterial = new THREE.MeshBasicMaterial( materialParams );
-				botStandardMaterial = new THREE.MeshStandardMaterial( materialParams );
-
-				boxBasicMaterial = [ basicMaterial, basicMaterial, topBasicMaterial, botBasicMaterial, basicMaterial, basicMaterial ];
-				boxStandardMaterial = [ standardMaterial, standardMaterial, topStandardMaterial, botStandardMaterial, standardMaterial, standardMaterial ];
-				cylinderBasicMaterial = [ basicMaterial, topBasicMaterial, botBasicMaterial ];
-				cylinderStandardMaterial = [ standardMaterial, topStandardMaterial, botStandardMaterial ];
-
-				meshNormal = new THREE.Mesh( new THREE.BufferGeometry(), standardMaterial );
-				meshSmooth = new THREE.Mesh( new THREE.BufferGeometry(), standardMaterial );
+				meshNormal = new THREE.Mesh( new THREE.BufferGeometry(), new THREE.MeshBasicMaterial() );
+				meshSmooth = new THREE.Mesh( new THREE.BufferGeometry(), new THREE.MeshBasicMaterial() );
 				meshNormal.position.set( - 0.7, 0, 0 );
 				meshSmooth.position.set( 0.7, 0, 0 );
 				scene.add( meshNormal, meshSmooth );
@@ -187,8 +156,9 @@
 				folder1.add( params, 'flatOnly' ).onFinishChange ( updateMeshes );
 				folder1.add( params, 'maxTriangles' ).onFinishChange( updateMeshes );
 
-				const folder2 = gui.addFolder( 'View' );
-				folder2.add( params, 'lighting' ).onFinishChange( updateView );
+				const folder2 = gui.addFolder( 'Material' );
+				folder2.add( params, 'flatShading' ).onFinishChange( updateView );
+				folder2.add( params, 'textured' ).onFinishChange( updateView );
 				folder2.add( params, 'wireframe' ).onFinishChange( updateView );
 
 				function refreshDisplay() {
@@ -244,8 +214,8 @@
 
 						for ( let i = 0; i < 65; i += 5 ) {
 
-							let x = ( Math.sin( i * 0.2 ) * Math.sin( i * 0.1 ) * 15 + 50 ) * 1.2;
-							let y = ( i - 5 ) * 3;
+							const x = ( Math.sin( i * 0.2 ) * Math.sin( i * 0.1 ) * 15 + 50 ) * 1.2;
+							const y = ( i - 5 ) * 3;
 							points.push( new THREE.Vector2( x * 0.0075, y * 0.005 ) );
 
 						}
@@ -337,24 +307,76 @@
 
 			}
 
+			function disposeMaterial( material ) {
+
+				const materials = Array.isArray( material ) ? material : [ material ];
+
+				for ( let i = 0; i < materials.length; i ++ ) {
+
+					if ( materials[ i ].dispose ) materials[ i ].dispose;
+
+				}
+
+			}
+
 			function updateView() {
+
+				disposeMaterial( meshNormal.material );
+				disposeMaterial( meshSmooth.material );
+
+				const materialParams = {
+					color: ( params.textured ) ? 0xffffff : 0x808080,
+					flatShading: params.flatShading,
+					map: ( params.textured ) ? texture : null,
+					polygonOffset: true,
+					polygonOffsetFactor: 1, // positive value pushes polygon further away
+					polygonOffsetUnits: 1
+				};
 
 				switch ( params.geometry.toLowerCase() ) {
 
-					case 'box':
+					case 'circle':
+					case 'lathe':
+					case 'plane':
+					case 'ring':
+					case 'teapot':
 
-						meshNormal.material = meshSmooth.material = ( params.lighting ) ? boxStandardMaterial : boxBasicMaterial;
+						materialParams.side = THREE.DoubleSide;
 						break;
 
+					case 'box':
+					case 'capsule':
 					case 'cone':
 					case 'cylinder':
+					case 'dodecahedron':
+					case 'icosahedron':
+					case 'octahedron':
+					case 'shape':
+					case 'sphere':
+					case 'tetrahedron':
+					case 'torus':
+					case 'torusknot':
 
-						meshNormal.material = meshSmooth.material = ( params.lighting ) ? cylinderStandardMaterial : cylinderBasicMaterial;
+						materialParams.side = THREE.FrontSide;
 						break;
 
-					default:
+				}
 
-						meshNormal.material = meshSmooth.material = ( params.lighting ) ? standardMaterial : basicMaterial;
+				if ( params.geometry.toLowerCase() === 'cylinder' && params.textured ) {
+
+					const sidesMaterial = new THREE.MeshStandardMaterial( materialParams );
+
+					materialParams.map = topTexture;
+					const topMaterial = new THREE.MeshStandardMaterial( materialParams );
+
+					materialParams.map = botTexture;
+					const bottomMaterial = new THREE.MeshStandardMaterial( materialParams );
+
+					meshNormal.material = meshSmooth.material = [ sidesMaterial, topMaterial, bottomMaterial ];
+
+				} else {
+
+					meshNormal.material = meshSmooth.material = new THREE.MeshStandardMaterial( materialParams );
 
 				}
 
