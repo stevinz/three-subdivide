@@ -43,7 +43,6 @@
 
 			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 			import { TeapotGeometry } from 'three/addons/geometries/TeapotGeometry.js';
-			import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 
 			import { LoopSubdivision } from 'three-subdivide';
 			// import { LoopSubdivision } from '../src/LoopSubdivision.js';
@@ -55,7 +54,6 @@
 			let wireMaterial;
 
 			const params = {
-				// subdivide
 				geometry: 'Box',
 				iterations: 3,
 				split: true,
@@ -63,7 +61,6 @@
 				preserveEdges: false,
 				flatOnly: false,
 				maxTriangles: 25000,
-				// material
 				flatShading: false,
 				textured: true,
 				wireframe: false
