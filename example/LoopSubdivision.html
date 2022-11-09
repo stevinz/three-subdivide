@@ -153,9 +153,9 @@
 				folder1.add( params, 'maxTriangles' ).onFinishChange( updateMeshes );
 
 				const folder2 = gui.addFolder( 'Material' );
-				folder2.add( params, 'flatShading' ).onFinishChange( updateView );
-				folder2.add( params, 'textured' ).onFinishChange( updateView );
-				folder2.add( params, 'wireframe' ).onFinishChange( updateView );
+				folder2.add( params, 'flatShading' ).onFinishChange( updateMaterial );
+				folder2.add( params, 'textured' ).onFinishChange( updateMaterial );
+				folder2.add( params, 'wireframe' ).onFinishChange( updateMaterial );
 
 				function refreshDisplay() {
 
@@ -299,7 +299,7 @@
 				wireNormal.geometry = normalGeometry.clone();
 				wireSmooth.geometry = smoothGeometry.clone();
 
-				updateView();
+				updateMaterial();
 
 			}
 
@@ -315,7 +315,7 @@
 
 			}
 
-			function updateView() {
+			function updateMaterial() {
 
 				disposeMaterial( meshNormal.material );
 				disposeMaterial( meshSmooth.material );
