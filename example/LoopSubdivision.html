@@ -109,14 +109,13 @@
 				topTexture = new THREE.TextureLoader().load( './textures/uv_grid_opengl_top.jpg', textureLoaded );
 				botTexture = new THREE.TextureLoader().load( './textures/uv_grid_opengl_bot.jpg', textureLoaded );
 
-				wireMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, depthTest: true, wireframe: true } );
-
 				meshNormal = new THREE.Mesh( new THREE.BufferGeometry(), new THREE.MeshBasicMaterial() );
 				meshSmooth = new THREE.Mesh( new THREE.BufferGeometry(), new THREE.MeshBasicMaterial() );
 				meshNormal.position.set( - 0.7, 0, 0 );
 				meshSmooth.position.set( 0.7, 0, 0 );
 				scene.add( meshNormal, meshSmooth );
 
+				wireMaterial = new THREE.MeshBasicMaterial( { color: 0xffffff, depthTest: true, wireframe: true } );
 				wireNormal = new THREE.Mesh( new THREE.BufferGeometry(), wireMaterial );
 				wireSmooth = new THREE.Mesh( new THREE.BufferGeometry(), wireMaterial );
 				wireNormal.visible = false;
@@ -193,7 +192,7 @@
 
 					case 'cylinder':
 
-						return new THREE.CylinderGeometry( 0.5, 0.5, 1, 5, 5 );
+						return new THREE.CylinderGeometry( 0.5, 0.5, 1, 5, 4 );
 
 					case 'dodecahedron':
 
