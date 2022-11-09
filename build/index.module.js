@@ -173,7 +173,7 @@ class LoopSubdivision {
             const normalHash = hashFromVector(_normal);
 
             // Vertex Hashes
-            let hashes = [
+            const hashes = [
                 `${vecHash0}_${vecHash1}_${normalHash}`, // [0]: 0to1
                 `${vecHash1}_${vecHash0}_${normalHash}`, // [1]: 1to0
                 `${vecHash1}_${vecHash2}_${normalHash}`, // [2]: 1to2
@@ -183,7 +183,7 @@ class LoopSubdivision {
             ];
 
             // Store Edge Hashes
-            let index = i / 3;
+            const index = i / 3;
             for (let j = 0; j < hashes.length; j++) {
                 // Attach Triangle Index to Edge Hash
                 if (! edgeHashToTriangle[hashes[j]]) edgeHashToTriangle[hashes[j]] = [];
@@ -512,7 +512,7 @@ class LoopSubdivision {
             addOpposite(hash1to2, i + 0);
             addOpposite(hash2to0, i + 1);
 
-            // Track Edges for edgePreserve
+            // Track Edges for 'edgePreserve'
             addEdgePoint(posHash0, hash0to1);
             addEdgePoint(posHash0, hash2to0);
             addEdgePoint(posHash1, hash0to1);
@@ -523,7 +523,7 @@ class LoopSubdivision {
 
         ///// Flat Position to Index Map
         for (let i = 0; i < flat.attributes.position.count; i++) {
-            const posHash = hashFromVector(_vertex[0].fromBufferAttribute(flatPosition, i));
+            const posHash = hashFromVector(_temp.fromBufferAttribute(flatPosition, i));
             if (! hashToIndex[posHash]) hashToIndex[posHash] = [];
             hashToIndex[posHash].push(i);
         }
@@ -569,29 +569,52 @@ class LoopSubdivision {
             const arrayLength = (flat.attributes.position.count * flatAttribute.itemSize);
             const floatArray = new existingAttribute.array.constructor(arrayLength);
 
+            // Process Triangles
             let index = 0;
             for (let i = 0; i < flat.attributes.position.count; i += 3) {
 
-                if (attributeName === 'uv' && ! params.uvSmooth) {
-                    for (let v = 0; v < 3; v++) {
-                        _vertex[v].fromBufferAttribute(flatAttribute, i + v);
-                    }
+                // Process Triangle Points
+                for (let v = 0; v < 3; v++) {
 
-                } else { // 'normal', 'position', 'color', etc...
-                    for (let v = 0; v < 3; v++) {
+                    if (attributeName === 'uv' && ! params.uvSmooth) {
+
+                        _vertex[v].fromBufferAttribute(flatAttribute, i + v);
+
+                    } else if (attributeName === 'normal') { // && params.normalSmooth) {
+
+                        _position[v].fromBufferAttribute(flatPosition, i + v);
+                        const positionHash = hashFromVector(_position[v]);
+                        const positions = hashToIndex[positionHash];
+
+                        const k = Object.keys(positions).length;
+                        const beta = 0.75 / k;
+                        const startWeight = 1.0 - (beta * k);
+
+                        _vertex[v].fromBufferAttribute(flatAttribute, i + v);
+                        _vertex[v].multiplyScalar(startWeight);
+
+                        positions.forEach(positionIndex => {
+                            _average.fromBufferAttribute(flatAttribute, positionIndex);
+                            _average.multiplyScalar(beta);
+                            _vertex[v].add(_average);
+                        });
+
+
+                    } else { // 'position', 'color', etc...
+
                         _vertex[v].fromBufferAttribute(flatAttribute, i + v);
                         _position[v].fromBufferAttribute(flatPosition, i + v);
 
-                        let positionHash = hashFromVector(_position[v]);
-                        let neighbors = existingNeighbors[positionHash];
-                        let opposites = flatOpposites[positionHash];
+                        const positionHash = hashFromVector(_position[v]);
+                        const neighbors = existingNeighbors[positionHash];
+                        const opposites = flatOpposites[positionHash];
 
                         ///// Adjust Source Vertex
                         if (neighbors) {
 
                             // Check Edges have even Opposite Points
                             if (params.preserveEdges) {
-                                let edgeSet = existingEdges[positionHash];
+                                const edgeSet = existingEdges[positionHash];
                                 let hasPair = true;
                                 for (const edgeHash of edgeSet) {
                                     if (flatOpposites[edgeHash].length % 2 !== 0) hasPair = false;
@@ -642,39 +665,6 @@ class LoopSubdivision {
                             });
                         }
                     }
-                }
-
-                // Add New Triangle Position
-                setTriangle(floatArray, index, flatAttribute.itemSize, _vertex[0], _vertex[1], _vertex[2]);
-                index += (flatAttribute.itemSize * 3);
-            }
-
-            ///// Smooth 'normal' Values
-            if (attributeName === 'normal') { // && params.normalSmooth) {
-                index = 0;
-                for (let i = 0; i < flat.attributes.position.count; i += 3) {
-                    for (let v = 0; v < 3; v++) {
-                        _position[v].fromBufferAttribute(flatPosition, i + v);
-                        let positionHash = hashFromVector(_position[v]);
-                        let positions = hashToIndex[positionHash];
-
-                        const k = Object.keys(positions).length;
-                        const beta = 0.625 / k; /* 5/8 */
-                        const startWeight = 1.0 - (beta * k);
-
-                        _vertex[v].fromBufferAttribute(flatAttribute, i + v);
-                        _vertex[v].multiplyScalar(startWeight);
-
-                        positions.forEach(positionIndex => {
-                            _average.fromBufferAttribute(flatAttribute, positionIndex);
-                            _average.multiplyScalar(beta);
-                            _vertex[v].add(_average);
-                        });
-                    }
-
-                    // Set Triangle
-                    setTriangle(floatArray, index, flatAttribute.itemSize, _vertex[0], _vertex[1], _vertex[2]);
-                    index += (flatAttribute.itemSize * 3);
                 }
 
                 // Add New Triangle Position
@@ -758,17 +748,17 @@ function setTriangle(positions, index, step, vec0, vec1, vec2) {
 
 function verifyGeometry(geometry) {
     if (geometry === undefined) {
-        console.warn(`LoopSubdivision: Geometry is undefined`);
+        console.warn(`LoopSubdivision: Geometry provided is undefined`);
         return false;
     }
 
     if (! geometry.isBufferGeometry) {
-        console.warn(`LoopSubdivision: Geometry must be 'BufferGeometry' type`);
+        console.warn(`LoopSubdivision: Geometry provided is not 'BufferGeometry' type`);
         return false;
     }
 
     if (geometry.attributes.position === undefined) {
-        console.warn(`LoopSubdivision: Missing required attribute - 'position'`);
+        console.warn(`LoopSubdivision: Geometry provided missing required 'position' attribute`);
         return false;
     }
 
