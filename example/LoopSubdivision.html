@@ -155,7 +155,7 @@
 				const folder2 = gui.addFolder( 'Material' );
 				folder2.add( params, 'flatShading' ).onFinishChange( updateMaterial );
 				folder2.add( params, 'textured' ).onFinishChange( updateMaterial );
-				folder2.add( params, 'wireframe' ).onFinishChange( updateMaterial );
+				folder2.add( params, 'wireframe' ).onFinishChange( updateWireframe );
 
 				function refreshDisplay() {
 
@@ -375,6 +375,12 @@
 					meshNormal.material = meshSmooth.material = new THREE.MeshStandardMaterial( materialParams );
 
 				}
+
+				render();
+
+			}
+
+			function updateWireframe() {
 
 				wireNormal.visible = wireSmooth.visible = params.wireframe;
 
