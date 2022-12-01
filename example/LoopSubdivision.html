@@ -45,7 +45,7 @@
 			import { TeapotGeometry } from 'three/addons/geometries/TeapotGeometry.js';
 
 			// import { LoopSubdivision } from 'three-subdivide';
-			import { LoopSubdivision } from '../src/LoopSubdivision.js';
+import { LoopSubdivision } from '../src/LoopSubdivision.js';
 
 			let renderer, scene, camera;
 			let texture, topTexture, botTexture;
@@ -247,10 +247,14 @@
 							curveSegments: 8,
 							steps: 1,
 							depth: 0.25,
+							bevelEnabled: false,
 							bevelSegments: 2
 						};
 
-						const shapeGeometry = new THREE.ExtrudeGeometry( fishShape, options );
+						const circleShape = new THREE.Shape();
+                		circleShape.absarc(0, 0, 0.5 /* radius */, 0, Math.PI * 2);
+
+						const shapeGeometry = new THREE.ExtrudeGeometry( circleShape, options );
 						shapeGeometry.center();
 
 						return shapeGeometry;
