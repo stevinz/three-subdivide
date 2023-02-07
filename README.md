@@ -86,9 +86,3 @@ Parameters Object ('params')
 - [maxTriangles]() : Number (optional) - limits subdivision to meshes with less than this number of triangles
 
 > NOTE: This modifier converts geometry to non-indexed before the subdivision algorithm is applied. If desired, you can use [BufferGeometryUtils.mergeVertices](https://threejs.org/docs/?q=buffer#examples/en/utils/BufferGeometryUtils.mergeVertices) to re-index geometry.
-
-## License
-
-Released under the terms of the MIT license, so it is free to use in your free or commercial projects.
-
-Copyright (c) 2022-2023 Stephens Nunnally <@stevinz>
