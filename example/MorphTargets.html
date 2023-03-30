@@ -38,8 +38,8 @@
  		<script type='importmap'>
 	 		{
 		 		"imports": {
-			 		"three": "https://unpkg.com/three@0.146.0/build/three.module.js",
-					"three/addons/": "https://unpkg.com/three@0.146.0/examples/jsm/",
+			 		"three": "https://unpkg.com/three@0.151.0/build/three.module.js",
+					"three/addons/": "https://unpkg.com/three@0.151.0/examples/jsm/",
 					"three-subdivide": "https://unpkg.com/three-subdivide@1.1.2/build/index.module.js"
 		 		}
 	 		}
@@ -108,6 +108,7 @@
 
 					const mesh_subdivided = new THREE.Mesh( geometry, material );
 
+					mesh_subdivided.name = mesh.name;
 					mesh_subdivided.scale.set( 1.25, 1.25, 1.25 );
 					mesh_subdivided.position.x = 100;
 					scene.add( mesh_subdivided );
