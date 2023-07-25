@@ -1,16 +1,12 @@
 import * as THREE from 'three';
 
-/** /////////////////////////////////////////////////////////////////////////////////
-//
-// @description Loop Subdivision Surface
-// @about       Smooth subdivision surface modifier for use with three.js BufferGeometry
-// @author      Stephens Nunnally <@stevinz>
-// @license     MIT - Copyright (c) 2022 Stephens Nunnally and Scidian Software
-// @source      https://github.com/stevinz/three-subdivide
-//
-//      See end of file for license details and acknowledgements
-//
-///////////////////////////////////////////////////////////////////////////////////*/
+/**
+ * @description Loop Subdivision Surface
+ * @about       Smooth subdivision surface modifier for use with three.js BufferGeometry.
+ * @author      Stephens Nunnally <@stevinz>
+ * @license     MIT - Copyright (c) 2022 Stephens Nunnally
+ * @source      https://github.com/stevinz/three-subdivide
+ */
 
 ///// Constants
 

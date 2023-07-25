@@ -1,3 +1,5 @@
+import dts from 'rollup-plugin-dts';
+
 export default [
 	{
 		input: './src/index.js',
@@ -30,5 +32,13 @@ export default [
 
 		},
 
-	}
+	},
+	{
+		input: './src/index.d.ts',
+		output: {
+			file: './build/index.module.d.ts',
+			format: 'es', // Use 'es' format for declaration files
+		},
+		plugins: [dts()],
+	},
 ];
