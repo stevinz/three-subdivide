@@ -1,4 +1,5 @@
-import { BufferGeometry } from "three";
+import { BufferGeometry } from 'three';
+
 export declare type ModifyParams = {
     split?: boolean
     uvSmooth?: boolean
