@@ -4,7 +4,8 @@
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, factory(global.THREE = global["three-subdivide"] || {}, global.THREE));
 })(this, (function (exports, THREE) { 'use strict';
 
-    function _interopNamespaceDefault(e) {
+    function _interopNamespace(e) {
+        if (e && e.__esModule) return e;
         var n = Object.create(null);
         if (e) {
             Object.keys(e).forEach(function (k) {
@@ -17,23 +18,19 @@
                 }
             });
         }
-        n.default = e;
+        n["default"] = e;
         return Object.freeze(n);
     }
 
-    var THREE__namespace = /*#__PURE__*/_interopNamespaceDefault(THREE);
+    var THREE__namespace = /*#__PURE__*/_interopNamespace(THREE);
 
-    /** /////////////////////////////////////////////////////////////////////////////////
-    //
-    // @description Loop Subdivision Surface
-    // @about       Smooth subdivision surface modifier for use with three.js BufferGeometry
-    // @author      Stephens Nunnally <@stevinz>
-    // @license     MIT - Copyright (c) 2022 Stephens Nunnally and Scidian Software
-    // @source      https://github.com/stevinz/three-subdivide
-    //
-    //      See end of file for license details and acknowledgements
-    //
-    ///////////////////////////////////////////////////////////////////////////////////*/
+    /**
+     * @description Loop Subdivision Surface
+     * @about       Smooth subdivision surface modifier for use with three.js BufferGeometry.
+     * @author      Stephens Nunnally <@stevinz>
+     * @license     MIT - Copyright (c) 2022 Stephens Nunnally
+     * @source      https://github.com/stevinz/three-subdivide
+     */
 
     ///// Constants
 
@@ -832,7 +829,10 @@
     // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
     // SOFTWARE.
 
+
     exports.LoopSubdivision = LoopSubdivision;
+
+    Object.defineProperty(exports, '__esModule', { value: true });
 
 }));
 //# sourceMappingURL=index.umd.cjs.map
