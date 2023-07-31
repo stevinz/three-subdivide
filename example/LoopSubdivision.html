@@ -79,7 +79,7 @@
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
-				if (version && !isNan(version) && version > 151) renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+				if (version && version > 151) renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
 				document.body.appendChild( renderer.domElement );
 
 				scene = new THREE.Scene();
