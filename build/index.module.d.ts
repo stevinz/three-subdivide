@@ -6,6 +6,7 @@ declare type ModifyParams = {
     preserveEdges?: boolean
     flatOnly?: boolean
     maxTriangles?: number
+    weight?: number
 }
 
 declare class LoopSubdivision {

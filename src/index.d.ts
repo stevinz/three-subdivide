@@ -6,7 +6,7 @@ export declare type ModifyParams = {
     preserveEdges?: boolean
     flatOnly?: boolean
     maxTriangles?: number
-    maxShared?: number
+    weight?: number
 }
 
 export declare class LoopSubdivision {

@@ -66,7 +66,8 @@ class LoopSubdivision {
      * @param {Boolean} preserveEdges - Should edges / breaks in geometry be ignored during subdivision?
      * @param {Boolean} flatOnly - If true, subdivision generates triangles, but does not modify positions
      * @param {Number} maxTriangles - If geometry contains more than this many triangles, subdivision will not continue
-    */
+     * @param {Number} weight - How much to weigh favoring heavy corners vs favoring Loop's formula
+     */
     static modify(bufferGeometry, iterations = 1, params = {}) {
         if (arguments.length > 3) console.warn(`LoopSubdivision.modify() now uses a parameter object. See readme for more info!`);
 
@@ -78,6 +79,9 @@ class LoopSubdivision {
         if (params.preserveEdges === undefined) params.preserveEdges = false;
         if (params.flatOnly === undefined) params.flatOnly = false;
         if (params.maxTriangles === undefined) params.maxTriangles = Infinity;
+        if (params.weight === undefined) params.weight = 1;
+        if (isNaN(params.weight) || !isFinite(params.weight)) params.weight = 1;
+        params.weight = Math.max(0, (Math.min(1, params.weight)));
 
         ///// Geometries
         if (! verifyGeometry(bufferGeometry)) return bufferGeometry;
@@ -98,7 +102,7 @@ class LoopSubdivision {
 
                 // Subdivide
                 if (params.flatOnly) {
-                    subdividedGeometry = LoopSubdivision.flat(modifiedGeometry);
+                    subdividedGeometry = LoopSubdivision.flat(modifiedGeometry, params);
                 } else {
                     subdividedGeometry = LoopSubdivision.smooth(modifiedGeometry, params);
                 }
@@ -370,7 +374,7 @@ class LoopSubdivision {
     ////////////////////
 
     /** Applies one iteration of Loop (flat) subdivision (1 triangle split into 4 triangles) */
-    static flat(geometry) {
+    static flat(geometry, params = {}) {
 
         ///// Geometries
         if (! verifyGeometry(geometry)) return geometry;
@@ -386,7 +390,7 @@ class LoopSubdivision {
             const attribute = existing.getAttribute(attributeName);
             if (! attribute) return;
 
-            loop.setAttribute(attributeName, LoopSubdivision.flatAttribute(attribute, vertexCount));
+            loop.setAttribute(attributeName, LoopSubdivision.flatAttribute(attribute, vertexCount, params));
         });
 
         ///// Morph Attributes
@@ -398,7 +402,7 @@ class LoopSubdivision {
             // Process Array of Float32BufferAttributes
 			for (let i = 0, l = morphAttribute.length; i < l; i++) {
                 if (morphAttribute[i].count !== vertexCount) continue;
-                array.push(LoopSubdivision.flatAttribute(morphAttribute[i], vertexCount));
+                array.push(LoopSubdivision.flatAttribute(morphAttribute[i], vertexCount, params));
             }
             loop.morphAttributes[attributeName] = array;
         }
@@ -409,7 +413,7 @@ class LoopSubdivision {
         return loop;
     }
 
-    static flatAttribute(attribute, vertexCount) {
+    static flatAttribute(attribute, vertexCount, params = {}) {
         const newTriangles = 4;
         const arrayLength = (vertexCount * attribute.itemSize) * newTriangles;
         const floatArray = new attribute.array.constructor(arrayLength);
@@ -454,7 +458,7 @@ class LoopSubdivision {
         ///// Geometries
         if (! verifyGeometry(geometry)) return geometry;
         const existing = (geometry.index !== null) ? geometry.toNonIndexed() : geometry.clone();
-        const flat = LoopSubdivision.flat(existing);
+        const flat = LoopSubdivision.flat(existing, params);
         const loop = new THREE.BufferGeometry();
 
         ///// Attributes
@@ -527,11 +531,11 @@ class LoopSubdivision {
         ///// Build Geometry, Set Attributes
         attributeList.forEach((attributeName) => {
             const existingAttribute = existing.getAttribute(attributeName);
-            const flatAttribute = flat.getAttribute(attributeName);
-            if (existingAttribute === undefined || flatAttribute === undefined) return;
+            const flattenedAttribute = flat.getAttribute(attributeName);
+            if (existingAttribute === undefined || flattenedAttribute === undefined) return;
 
-            const floatArray = subdivideAttribute(attributeName, existingAttribute, flatAttribute);
-            loop.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, flatAttribute.itemSize));
+            const floatArray = subdivideAttribute(attributeName, existingAttribute, flattenedAttribute);
+            loop.setAttribute(attributeName, new THREE.BufferAttribute(floatArray, flattenedAttribute.itemSize));
         });
 
         ///// Morph Attributes
@@ -544,10 +548,10 @@ class LoopSubdivision {
             for (let i = 0, l = morphAttribute.length; i < l; i++) {
                 if (morphAttribute[i].count !== vertexCount) continue;
                 const existingAttribute = morphAttribute[i];
-                const flatAttribute = LoopSubdivision.flatAttribute(morphAttribute[i], morphAttribute[i].count);
+                const flattenedAttribute = LoopSubdivision.flatAttribute(morphAttribute[i], morphAttribute[i].count, params);
 
-                const floatArray = subdivideAttribute(attributeName, existingAttribute, flatAttribute);
-                array.push(new THREE.BufferAttribute(floatArray, flatAttribute.itemSize));
+                const floatArray = subdivideAttribute(attributeName, existingAttribute, flattenedAttribute);
+                array.push(new THREE.BufferAttribute(floatArray, flattenedAttribute.itemSize));
             }
             loop.morphAttributes[attributeName] = array;
         }
@@ -561,8 +565,8 @@ class LoopSubdivision {
         //////////
 
         // Loop Subdivide Function
-        function subdivideAttribute(attributeName, existingAttribute, flatAttribute) {
-            const arrayLength = (flat.attributes.position.count * flatAttribute.itemSize);
+        function subdivideAttribute(attributeName, existingAttribute, flattenedAttribute) {
+            const arrayLength = (flat.attributes.position.count * flattenedAttribute.itemSize);
             const floatArray = new existingAttribute.array.constructor(arrayLength);
 
             // Process Triangles
@@ -574,7 +578,7 @@ class LoopSubdivision {
 
                     if (attributeName === 'uv' && ! params.uvSmooth) {
 
-                        _vertex[v].fromBufferAttribute(flatAttribute, i + v);
+                        _vertex[v].fromBufferAttribute(flattenedAttribute, i + v);
 
                     } else if (attributeName === 'normal') { // && params.normalSmooth) {
 
@@ -586,11 +590,11 @@ class LoopSubdivision {
                         const beta = 0.75 / k;
                         const startWeight = 1.0 - (beta * k);
 
-                        _vertex[v].fromBufferAttribute(flatAttribute, i + v);
+                        _vertex[v].fromBufferAttribute(flattenedAttribute, i + v);
                         _vertex[v].multiplyScalar(startWeight);
 
                         positions.forEach(positionIndex => {
-                            _average.fromBufferAttribute(flatAttribute, positionIndex);
+                            _average.fromBufferAttribute(flattenedAttribute, positionIndex);
                             _average.multiplyScalar(beta);
                             _vertex[v].add(_average);
                         });
@@ -598,7 +602,7 @@ class LoopSubdivision {
 
                     } else { // 'position', 'color', etc...
 
-                        _vertex[v].fromBufferAttribute(flatAttribute, i + v);
+                        _vertex[v].fromBufferAttribute(flattenedAttribute, i + v);
                         _position[v].fromBufferAttribute(flatPosition, i + v);
 
                         const positionHash = hashFromVector(_position[v]);
@@ -630,8 +634,14 @@ class LoopSubdivision {
                             ///// Stevinz' Formula
                             // const beta = 0.5 / k;
 
+                            ///// Corners
+                            const heavy = (1 / k) / k;
+
+                            ///// Interpolate Beta -> Heavy
+                            const weight = lerp(heavy, beta, params.weight);
+
                             ///// Average with Neighbors
-                            const startWeight = 1.0 - (beta * k);
+                            const startWeight = 1.0 - (weight * k);
                             _vertex[v].multiplyScalar(startWeight);
 
                             for (let neighborHash in neighbors) {
@@ -643,7 +653,7 @@ class LoopSubdivision {
                                 }
                                 _average.divideScalar(neighborIndices.length);
 
-                                _average.multiplyScalar(beta);
+                                _average.multiplyScalar(weight);
                                 _vertex[v].add(_average);
                             }
 
@@ -664,8 +674,8 @@ class LoopSubdivision {
                 }
 
                 // Add New Triangle Position
-                setTriangle(floatArray, index, flatAttribute.itemSize, _vertex[0], _vertex[1], _vertex[2]);
-                index += (flatAttribute.itemSize * 3);
+                setTriangle(floatArray, index, flattenedAttribute.itemSize, _vertex[0], _vertex[1], _vertex[2]);
+                index += (flattenedAttribute.itemSize * 3);
             }
 
             return floatArray;
@@ -696,6 +706,10 @@ function hashFromNumber(num, shift = _positionShift) {
 /** Generates hash strong from Vector3 */
 function hashFromVector(vector, shift = _positionShift) {
     return `${hashFromNumber(vector.x, shift)},${hashFromNumber(vector.y, shift)},${hashFromNumber(vector.z, shift)}`;
+}
+
+function lerp(x, y, t) {
+    return (1 - t) * x + t * y;
 }
 
 function round(x) {

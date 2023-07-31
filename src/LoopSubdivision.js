@@ -127,7 +127,7 @@ export class LoopSubdivision {
      * @param {Boolean} preserveEdges - Should edges / breaks in geometry be ignored during subdivision?
      * @param {Boolean} flatOnly - If true, subdivision generates triangles, but does not modify positions
      * @param {Number} maxTriangles - If geometry contains more than this many triangles, subdivision will not continue
-     * @param {Number} maxShared - Cuttoff for shared vertices
+     * @param {Number} weight - How much to weigh favoring heavy corners vs favoring Loop's formula
      */
     static modify(bufferGeometry, iterations = 1, params = {}) {
         if (arguments.length > 3) console.warn(`LoopSubdivision.modify() now uses a parameter object. See readme for more info!`);
@@ -140,7 +140,9 @@ export class LoopSubdivision {
         if (params.preserveEdges === undefined) params.preserveEdges = false;
         if (params.flatOnly === undefined) params.flatOnly = false;
         if (params.maxTriangles === undefined) params.maxTriangles = Infinity;
-        if (params.maxShared === undefined) params.maxShared = 0;
+        if (params.weight === undefined) params.weight = 1;
+        if (isNaN(params.weight) || !isFinite(params.weight)) params.weight = 1;
+        params.weight = Math.max(0, (Math.min(1, params.weight)));
 
         ///// Geometries
         if (! verifyGeometry(bufferGeometry)) return bufferGeometry;
@@ -693,8 +695,14 @@ export class LoopSubdivision {
                             ///// Stevinz' Formula
                             // const beta = 0.5 / k;
 
+                            ///// Corners
+                            const heavy = (1 / k) / k;
+
+                            ///// Interpolate Beta -> Heavy
+                            const weight = lerp(heavy, beta, params.weight);
+
                             ///// Average with Neighbors
-                            const startWeight = 1.0 - (beta * k);
+                            const startWeight = 1.0 - (weight * k);
                             _vertex[v].multiplyScalar(startWeight);
 
                             for (let neighborHash in neighbors) {
@@ -706,7 +714,7 @@ export class LoopSubdivision {
                                 }
                                 _average.divideScalar(neighborIndices.length);
 
-                                _average.multiplyScalar(beta);
+                                _average.multiplyScalar(weight);
                                 _vertex[v].add(_average);
                             }
 
@@ -759,6 +767,10 @@ function hashFromNumber(num, shift = _positionShift) {
 /** Generates hash strong from Vector3 */
 function hashFromVector(vector, shift = _positionShift) {
     return `${hashFromNumber(vector.x, shift)},${hashFromNumber(vector.y, shift)},${hashFromNumber(vector.z, shift)}`;
+}
+
+function lerp(x, y, t) {
+    return (1 - t) * x + t * y;
 }
 
 function round(x) {
