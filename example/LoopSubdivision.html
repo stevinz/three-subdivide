@@ -44,8 +44,11 @@
 			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 			import { TeapotGeometry } from 'three/addons/geometries/TeapotGeometry.js';
 
-			import { LoopSubdivision } from 'three-subdivide';
-			// import { LoopSubdivision } from '../src/LoopSubdivision.js';
+			// // NPM
+			// import { LoopSubdivision } from 'three-subdivide';
+
+			// // LOCAL
+			import { LoopSubdivision } from '../src/LoopSubdivision.js';
 
 			let renderer, scene, camera;
 			let texture, topTexture, botTexture;
@@ -61,6 +64,7 @@
 				preserveEdges: false,
 				flatOnly: false,
 				maxTriangles: 25000,
+				maxShared: 0,
 				flatShading: false,
 				textured: true,
 				wireframe: false
@@ -150,6 +154,7 @@
 				const preserveController = folder1.add( params, 'preserveEdges' ).onFinishChange( updateMeshes );
 				folder1.add( params, 'flatOnly' ).onFinishChange( updateMeshes );
 				folder1.add( params, 'maxTriangles' ).onFinishChange( updateMeshes );
+				folder1.add( params, 'maxShared' ).min( 0 ).step( 1 ).onFinishChange( updateMeshes );
 
 				const folder2 = gui.addFolder( 'Material' );
 				folder2.add( params, 'flatShading' ).onFinishChange( updateMaterial );
