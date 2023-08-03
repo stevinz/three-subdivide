@@ -6,6 +6,7 @@
 !.vscode/extensions.json
 *.code-workspace
 node_modules/
+temp/
 
 # Local History for Visual Studio Code
 .history/

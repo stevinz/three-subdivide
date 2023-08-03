@@ -141,8 +141,7 @@ export class LoopSubdivision {
         if (params.flatOnly === undefined) params.flatOnly = false;
         if (params.maxTriangles === undefined) params.maxTriangles = Infinity;
         if (params.weight === undefined) params.weight = 1;
-        params.weight = parseFloat(params.weight);
-        if (isNan(params.weight) || !isFinite(params.weight)) params.weight = 1;
+        if (isNaN(params.weight) || !isFinite(params.weight)) params.weight = 1;
         params.weight = Math.max(0, (Math.min(1, params.weight)));
 
         ///// Geometries
